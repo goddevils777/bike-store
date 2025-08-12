@@ -1,0 +1,24 @@
+{
+  "name": "rebike-parser",
+  "version": "1.0.0",
+  "description": "Парсер товаров с rebike.com с автообновлением",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "parse": "node src/scheduler.js --once",
+    "schedule": "node src/scheduler.js",
+    "dev": "node src/server.js"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0",
+    "express": "^4.18.2",
+    "nodemailer": "^6.9.0",
+    "node-cron": "^3.0.2",
+    "helmet": "^7.0.0",
+    "express-rate-limit": "^6.10.0",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
