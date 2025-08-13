@@ -1,0 +1,55 @@
+<header class="header">
+    <div class="container">
+        <div class="logo">
+            <h1><a href="/" onclick="return handleHomeClick(event)">ReBike Store</a></h1>
+            <p>Качественные велосипеды из Европы</p>
+        </div>
+                
+        <div class="header-center">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Поиск велосипедов..." autocomplete="off">
+                <button onclick="handleSearchClick()">Найти</button>
+                <div class="search-suggestions" id="searchSuggestions">
+                    <!-- Автоподсказки будут добавлены через JS -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="contacts">
+            <div class="contact-item">
+                <strong>📧</strong> info@rebike-store.ru
+            </div>
+            <div class="contact-item">
+                <strong>📞</strong> +7 (999) 123-45-67
+            </div>
+            <div class="contact-item">
+                <strong>⏰</strong> Пн-Пт 9:00-18:00
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="categories-bar">
+    <div class="container">
+        <div class="categories-wrapper">
+            <button class="category-nav-btn category-nav-left" id="categoryNavLeft">‹</button>
+            <div class="categories-container" id="categoriesContainer">
+                 <div class="category-item" data-category="sales" onclick="handleCategoryClick('sales')">SALE</div>
+                <div class="category-item active" data-category="all" onclick="handleCategoryClick('all')">Alle E-Bikes</div>
+                <div class="category-item" data-category="trekking-city" onclick="handleCategoryClick('trekking-city')">Trekking & City E-Bikes</div>
+                <div class="category-item" data-category="trekking" onclick="handleCategoryClick('trekking')">Trekking E-Bikes</div>
+                <div class="category-item" data-category="city" onclick="handleCategoryClick('city')">City E-Bikes</div>
+                <div class="category-item" data-category="urban" onclick="handleCategoryClick('urban')">Urban E-Bikes</div>
+                <div class="category-item" data-category="mountain" onclick="handleCategoryClick('mountain')">E-Mountainbikes</div>
+                <div class="category-item" data-category="hardtail" onclick="handleCategoryClick('hardtail')">E-Bikes Hardtail</div>
+                <div class="category-item" data-category="fully" onclick="handleCategoryClick('fully')">E-Bikes Fully</div>
+                <div class="category-item" data-category="cargo" onclick="handleCategoryClick('cargo')">E-Lastenrad</div>
+                <div class="category-item" data-category="speed" onclick="handleCategoryClick('speed')">S-Pedelecs</div>
+                <div class="category-item" data-category="gravel" onclick="handleCategoryClick('gravel')">E-Gravel & Rennräder</div>
+                <div class="category-item" data-category="kids" onclick="handleCategoryClick('kids')">Kinder E-Bikes</div>
+                <div class="category-item" data-category="classic" onclick="handleCategoryClick('classic')">Fahrräder</div>
+            </div>
+            <button class="category-nav-btn category-nav-right" id="categoryNavRight">›</button>
+        </div>
+    </div>
+</div>

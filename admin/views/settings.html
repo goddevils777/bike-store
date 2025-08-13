@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки - ReBike Admin</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚴</text></svg>">
+    <link rel="stylesheet" href="/admin/css/admin.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Боковое меню -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🚴</div>
+                <h2>ReBike Admin</h2>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#dashboard" class="nav-link">
+                        📊 Дашборд
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#orders" class="nav-link">
+                        📦 Заказы
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="#settings" class="nav-link">
+                        ⚙️ Настройки
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#logout" class="nav-link logout">
+                        🚪 Выход
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Настройки системы</h1>
+                <div class="header-actions">
+                    <button class="btn-refresh" id="refreshBtn">🔄 Обновить</button>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- Контактная информация -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <h2>📞 Контактная информация</h2>
+                        <p>Эти данные отображаются в шапке сайта</p>
+                    </div>
+                    
+                    <form class="settings-form" id="contactsForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="contactEmail">Email для контактов</label>
+                                <input type="email" id="contactEmail" name="email" required 
+                                       placeholder="info@rebike-store.ru">
+                            </div>
+                            <div class="form-group">
+                                <label for="contactPhone">Телефон</label>
+                                <input type="text" id="contactPhone" name="phone" required 
+                                       placeholder="+7 (999) 123-45-67">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contactHours">Часы работы</label>
+                            <input type="text" id="contactHours" name="hours" required 
+                                   placeholder="Пн-Пт 9:00-18:00">
+                        </div>
+                        
+                        <button type="submit" class="btn-save">💾 Сохранить контакты</button>
+                    </form>
+                </div>
+
+                <!-- Настройки цен -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <h2>💰 Настройки цен</h2>
+                        <p>Наценка добавляется к ценам товаров с сайта-источника</p>
+                    </div>
+                    
+                    <form class="settings-form" id="pricingForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="markupPercent">Наценка (%)</label>
+                                <input type="number" id="markupPercent" name="markup" 
+                                       min="0" max="1000" step="0.1" required 
+                                       placeholder="10">
+                                <small class="form-hint">
+                                    Например: 10% означает что к цене 1000€ добавится 100€
+                                </small>
+                            </div>
+                            <div class="markup-preview">
+                                <h4>Пример расчета:</h4>
+                                <div class="calculation">
+                                    <div>Цена источника: <span class="original">1000 €</span></div>
+                                    <div>Наценка: <span class="markup">+100 €</span></div>
+                                    <div>Итоговая цена: <span class="final">1100 €</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn-save">💾 Сохранить наценку</button>
+                    </form>
+                </div>
+
+                <!-- Email уведомления -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <h2>📧 Email уведомления</h2>
+                        <p>На этот email будут приходить уведомления о новых заказах</p>
+                    </div>
+                    
+                    <form class="settings-form" id="emailForm">
+                        <div class="form-group">
+                            <label for="notificationEmail">Email для заказов</label>
+                            <input type="email" id="notificationEmail" name="email" required 
+                                   placeholder="orders@rebike-store.ru">
+                            <small class="form-hint">
+                                Убедитесь что у вас настроен SMTP в конфигурации
+                            </small>
+                        </div>
+                        
+                        <button type="submit" class="btn-save">💾 Сохранить email</button>
+                    </form>
+                </div>
+
+                <!-- Управление каталогом -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <h2>🔄 Управление каталогом</h2>
+                        <p>Обновление товаров с сайта-источника</p>
+                    </div>
+                    
+                    <div class="catalog-controls">
+                        <div class="control-group">
+                            <h4>Ручное обновление</h4>
+                            <p>Запустить парсинг товаров прямо сейчас</p>
+                            <button class="btn-action" id="updateCatalogBtn">
+                                🚀 Запустить обновление каталога
+                            </button>
+                        </div>
+                        
+                        <div class="control-group">
+                            <h4>Автоматическое обновление</h4>
+                            <p>Каталог обновляется автоматически каждые 6 часов и в 2:00 ночи</p>
+                            <div class="schedule-info">
+                                <span class="schedule-item">⏰ Каждые 6 часов</span>
+                                <span class="schedule-item">🌙 В 2:00 ночи</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="update-status" id="updateStatus">
+                        <div class="status-info">
+                            <strong>Статус:</strong> <span id="updateStatusText">Готов к обновлению</span>
+                        </div>
+                        <div class="status-progress" id="updateProgress" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <div class="progress-text">Обновление каталога...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Уведомления -->
+    <div class="notification" id="notification">
+        <div class="notification-content">
+            <span class="notification-icon"></span>
+            <span class="notification-text"></span>
+            <button class="notification-close">&times;</button>
+        </div>
+    </div>
+
+    <script src="/admin/js/settings.js"></script>
+</body>
+</html>

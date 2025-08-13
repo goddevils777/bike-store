@@ -1,3 +1,11 @@
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    overflow-x: hidden;
+}
+
 /* Полные стили для страницы товара */
 .breadcrumb {
     padding: 20px 0;
@@ -83,7 +91,7 @@
 }
 
 /* Информация о товаре */
-.product-info {
+.product-details {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -237,6 +245,8 @@
     color: #4a5568;
     line-height: 1.7;
     font-size: 1.05rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .specifications {
@@ -272,6 +282,7 @@
     border-radius: 10px;
     border: 1px solid #e2e8f0;
     transition: all 0.2s;
+    min-width: 0;
 }
 
 .spec-item:hover {
@@ -283,6 +294,8 @@
     font-weight: 600;
     color: #4a5568;
     font-size: 0.95rem;
+    flex-shrink: 0;
+    margin-right: 12px;
 }
 
 .spec-value {
@@ -290,122 +303,25 @@
     text-align: right;
     font-weight: 500;
     font-size: 0.95rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    min-width: 0;
 }
-
-/* Модальное окно - наследуем стили из основного CSS */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-}
-
-.modal-content {
-    background: white;
-    margin: 5% auto;
-    padding: 32px;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 480px;
-    position: relative;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-}
-
-.close {
-    color: #a0aec0;
-    float: right;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    position: absolute;
-    right: 20px;
-    top: 20px;
-    transition: color 0.2s;
-}
-
-.close:hover {
-    color: #4a5568;
-}
-
-.modal h3 {
-    margin-bottom: 24px;
-    color: #2d3748;
-    font-size: 1.4rem;
-    font-weight: 600;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 500;
-    color: #4a5568;
-    font-size: 0.9rem;
-}
-
-.form-group input,
-.form-group textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 15px;
-    transition: border-color 0.2s;
-    background: #f7fafc;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: #4299e1;
-    background: white;
-}
-
-.btn-primary {
-    width: 100%;
-    padding: 14px;
-    background: #38a169;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.btn-primary:hover {
-    background: #2f855a;
-}
-
-/* Адаптивность */
 @media (max-width: 768px) {
     .product-main {
         grid-template-columns: 1fr;
         gap: 24px;
     }
     
-    .product-info {
+    .product-details {
         min-height: auto;
     }
     
     .product-title {
         font-size: 1.5rem;
         margin-bottom: 20px;
-    }
-    
-    .current-price {
-        font-size: 2rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
     
     .main-image {
@@ -413,18 +329,24 @@
     }
     
     .price-section {
-        padding: 20px;
+        padding: 20px 16px;
         margin-bottom: 20px;
     }
     
-    .order-section {
-        padding-top: 16px;
+    .current-price {
+        font-size: 2rem;
     }
     
     .description-section,
     .specifications {
-        padding: 20px;
+        padding: 20px 16px;
         margin-bottom: 24px;
+    }
+    
+    .description-text {
+        font-size: 1rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
     
     .spec-list {
@@ -434,11 +356,20 @@
     
     .spec-item {
         padding: 12px 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
     }
     
-    .modal-content {
-        margin: 10% auto;
-        padding: 24px;
+    .spec-key {
+        margin-right: 0;
+    }
+    
+    .spec-value {
+        text-align: left;
+        font-size: 0.9rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
 }
 
@@ -448,20 +379,345 @@
     }
     
     .main-image {
-        height: 250px;
+        height: 300px;
     }
     
     .product-title {
         font-size: 1.3rem;
+        line-height: 1.4;
     }
     
     .current-price {
         font-size: 1.8rem;
     }
     
+    .original-price {
+        font-size: 1.1rem;
+    }
+    
     .savings-info {
         flex-direction: column;
         gap: 8px;
         align-items: flex-start;
+    }
+    
+    .discount-badge,
+    .savings-amount {
+        font-size: 0.8rem;
+        padding: 4px 10px;
+    }
+    
+    .price-section {
+        padding: 16px 12px;
+    }
+    
+    .description-section,
+    .specifications {
+        padding: 16px 12px;
+    }
+    
+    .breadcrumb {
+        padding: 16px 0;
+        font-size: 0.85rem;
+    }
+    
+    .btn-order-large {
+        padding: 16px 20px;
+        font-size: 1.1rem;
+    }
+    
+    .thumbnail {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .image-carousel {
+        gap: 8px;
+    }
+}
+
+@media (max-width: 360px) {
+    .container {
+        padding: 0 12px;
+    }
+    
+    .product-title {
+        font-size: 1.2rem;
+    }
+    
+    .current-price {
+        font-size: 1.6rem;
+    }
+    
+    .price-section {
+        padding: 12px 8px;
+    }
+    
+    .description-section,
+    .specifications {
+        padding: 12px 8px;
+    }
+    
+    .spec-item {
+        padding: 10px 12px;
+    }
+}
+
+/* ДОБАВИТЬ НОВЫЙ МЕДИА-ЗАПРОС */
+@media (max-width: 700px) {
+    .container {
+        padding: 0 8px !important;
+        max-width: 100% !important;
+    }
+    
+    .product-main {
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .main-image {
+        height: 350px; /* ИЗМЕНЕНО: с 220px на 280px */
+        max-width: 100%;
+    }
+    
+    .product-title {
+        font-size: 1.2rem !important;
+        line-height: 1.3;
+        margin-bottom: 16px;
+        word-break: break-word;
+        hyphens: auto;
+    }
+    
+    .price-section {
+        padding: 12px 8px !important;
+        margin-bottom: 16px;
+        border-radius: 12px;
+    }
+    
+    .current-price {
+        font-size: 1.6rem !important;
+        line-height: 1.1;
+        word-break: break-all;
+        margin-bottom: 8px;
+    }
+    
+    .original-price {
+        font-size: 1rem !important;
+        margin-right: 8px;
+    }
+    
+    .savings-info {
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+    }
+    
+    .discount-badge,
+    .savings-amount {
+        font-size: 0.75rem !important;
+        padding: 3px 8px !important;
+        white-space: nowrap;
+    }
+    
+    .btn-order-large {
+        padding: 12px 16px !important;
+        font-size: 0.95rem !important;
+        border-radius: 10px;
+    }
+    
+    .description-section,
+    .specifications {
+        padding: 12px 8px !important;
+        margin-bottom: 16px;
+        border-radius: 12px;
+    }
+    
+    .description-section h3,
+    .specifications h3 {
+        font-size: 1.2rem !important;
+        margin-bottom: 12px;
+    }
+    
+    .description-text {
+        font-size: 0.9rem !important;
+        line-height: 1.5;
+    }
+    
+    .spec-item {
+        padding: 8px 10px !important;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        border-radius: 8px;
+    }
+    
+    .spec-key {
+        font-size: 0.85rem !important;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+    
+    .spec-value {
+        font-size: 0.8rem !important;
+        text-align: left;
+        word-break: break-word;
+        line-height: 1.3;
+    }
+    
+    .back-link {
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+    }
+    
+    .breadcrumb {
+        padding: 12px 0;
+        font-size: 0.8rem;
+    }
+    
+    .thumbnail {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .image-carousel {
+        gap: 6px;
+        padding: 6px 0;
+    }
+}
+
+/* ДОПОЛНИТЕЛЬНО ДЛЯ ОЧЕНЬ МАЛЕНЬКИХ ЭКРАНОВ */
+@media (max-width: 400px) {
+    .container {
+        padding: 0 4px !important;
+    }
+    
+    .product-title {
+        font-size: 1.1rem !important;
+    }
+    
+    .current-price {
+        font-size: 1.4rem !important;
+    }
+    
+    .price-section {
+        padding: 8px 6px !important;
+    }
+    
+    .description-section,
+    .specifications {
+        padding: 8px 6px !important;
+    }
+    
+    .spec-item {
+        padding: 6px 8px !important;
+    }
+}
+
+/* АДАПТИВНОСТЬ ДЛЯ СВЕРХМАЛЫХ ЭКРАНОВ */
+@media (max-width: 300px) {
+    .container {
+        padding: 0 2px !important;
+    }
+    
+    .main-image {
+        height: 180px !important;
+        border-radius: 8px;
+    }
+    
+    .product-title {
+        font-size: 1rem !important;
+        line-height: 1.2;
+        margin-bottom: 12px;
+    }
+    
+    .current-price {
+        font-size: 1.3rem !important;
+        line-height: 1;
+    }
+    
+    .original-price {
+        font-size: 0.9rem !important;
+    }
+    
+    .price-section {
+        padding: 6px 4px !important;
+        margin-bottom: 12px;
+        border-radius: 8px;
+    }
+    
+    .savings-info {
+        gap: 4px;
+    }
+    
+    .discount-badge,
+    .savings-amount {
+        font-size: 0.7rem !important;
+        padding: 2px 6px !important;
+    }
+    
+    .btn-order-large {
+        padding: 10px 12px !important;
+        font-size: 0.9rem !important;
+        border-radius: 8px;
+    }
+    
+    .description-section,
+    .specifications {
+        padding: 8px 4px !important;
+        margin-bottom: 12px;
+        border-radius: 8px;
+    }
+    
+    .description-section h3,
+    .specifications h3 {
+        font-size: 1.1rem !important;
+        margin-bottom: 10px;
+    }
+    
+    .description-text {
+        font-size: 0.85rem !important;
+        line-height: 1.4;
+    }
+    
+    .spec-item {
+        padding: 6px 6px !important;
+        gap: 2px;
+        border-radius: 6px;
+        margin-bottom: 6px;
+    }
+    
+    .spec-key {
+        font-size: 0.8rem !important;
+        margin-bottom: 1px;
+    }
+    
+    .spec-value {
+        font-size: 0.75rem !important;
+        line-height: 1.2;
+    }
+    
+    .back-link {
+        font-size: 0.8rem;
+        margin-bottom: 10px;
+    }
+    
+    .breadcrumb {
+        padding: 8px 0;
+        font-size: 0.75rem;
+    }
+    
+    .thumbnail {
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+    }
+    
+    .image-carousel {
+        gap: 4px;
+        padding: 4px 0;
+    }
+    
+    .order-section {
+        padding-top: 12px;
     }
 }

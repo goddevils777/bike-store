@@ -6,25 +6,11 @@
     <title>Товар - ReBike Store</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/product.css">
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚴</text></svg>">
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <div class="logo">
-                <h1><a href="/">ReBike Store</a></h1>
-                <p>Качественные велосипеды из Европы</p>
-            </div>
-            
-            <div class="contacts">
-                <div class="contact-item">
-                    <strong>📧</strong> info@rebike-store.ru
-                </div>
-                <div class="contact-item">
-                    <strong>📞</strong> +7 (999) 123-45-67
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- Контейнер для шапки -->
+    <div id="headerContainer"></div>
 
     <main class="main">
         <div class="container">
@@ -42,11 +28,8 @@
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 ReBike Store. Все права защищены.</p>
-        </div>
-    </footer>
+    <!-- Контейнер для футера -->
+    <div id="footerContainer"></div>
 
     <!-- Модальное окно заказа -->
     <div class="modal" id="orderModal">
@@ -74,6 +57,12 @@
                     <input type="tel" id="customerPhone">
                 </div>
                 
+                <!-- ДОБАВИТЬ ЭТО ПОЛЕ -->
+                <div class="form-group">
+                    <label for="customerAddress">Адрес доставки</label>
+                    <textarea id="customerAddress" rows="2" placeholder="Укажите адрес для доставки"></textarea>
+                </div>
+                
                 <div class="form-group">
                     <label for="customerComment">Комментарий к заказу</label>
                     <textarea id="customerComment" rows="3"></textarea>
@@ -84,6 +73,8 @@
         </div>
     </div>
 
+    <!-- Подключаем скрипты -->
+    <script src="js/components.js"></script>
     <script src="js/product.js"></script>
 </body>
 </html>

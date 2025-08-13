@@ -1,0 +1,20 @@
+{
+  "security": {
+    "secretHash": "a8f5f167f44f4964e6c998dee827110c",
+    "pinCode": "7777",
+    "sessionDuration": 86400000,
+    "maxLoginAttempts": 5,
+    "lockoutDuration": 300000
+  },
+  "ui": {
+    "title": "ReBike Admin Panel",
+    "itemsPerPage": 20,
+    "dateFormat": "DD.MM.YYYY HH:mm"
+  },
+  "orderStatuses": [
+    { "value": "new", "label": "Новый", "color": "#4299e1" },
+    { "value": "processing", "label": "В обработке", "color": "#f6ad55" },
+    { "value": "cancelled", "label": "Отменен", "color": "#fc8181" },
+    { "value": "completed", "label": "Выполнен", "color": "#68d391" }
+  ]
+}

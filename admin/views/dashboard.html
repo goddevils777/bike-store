@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ панель - ReBike</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚴</text></svg>">
+    <link rel="stylesheet" href="/admin/css/admin.css">
+</head>
+
+<body>
+    <div class="admin-layout">
+        <!-- Боковое меню -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🚴</div>
+                <h2>ReBike Admin</h2>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <a href="#dashboard" class="nav-link">
+                        📊 Дашборд
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#orders" class="nav-link">
+                        📦 Заказы
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#settings" class="nav-link">
+                        ⚙️ Настройки
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#logout" class="nav-link logout">
+                        🚪 Выход
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Панель управления</h1>
+                <div class="user-info">
+                    Добро пожаловать в админку!
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- Статистика -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-content">
+                            <h3 id="totalOrders">Загрузка...</h3>
+                            <p>Всего заказов</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-content">
+                            <h3 id="todayOrders">Загрузка...</h3>
+                            <p>Заказов сегодня</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-content">
+                            <h3 id="weekOrders">Загрузка...</h3>
+                            <p>За неделю</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">🔄</div>
+                        <div class="stat-content">
+                            <h3 id="processingOrders">Загрузка...</h3>
+                            <p>В обработке</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Последние заказы -->
+                <div class="recent-orders">
+                    <h2>Последние заказы</h2>
+                    <div class="orders-table" id="recentOrdersTable">
+                        <div class="loading">Загрузка заказов...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/admin/js/modal-component.js"></script>
+    <script src="/admin/js/dashboard.js"></script>
+</body>
+
+</html>

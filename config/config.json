@@ -22,7 +22,7 @@
     "currency": "€"
   },
   "security": {
-    "maxRequestsPerMinute": 60,
+    "maxRequestsPerMinute": 300,
     "allowedOrigins": ["http://localhost:3000"]
   }
 }

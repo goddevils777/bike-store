@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление заказами - ReBike Admin</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚴</text></svg>">
+    <link rel="stylesheet" href="/admin/css/admin.css">
+</head>
+
+<body>
+    <div class="admin-layout">
+        <!-- Боковое меню -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🚴</div>
+                <h2>ReBike Admin</h2>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#dashboard" class="nav-link">
+                        📊 Дашборд
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="#orders" class="nav-link">
+                        📦 Заказы
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#settings" class="nav-link">
+                        ⚙️ Настройки
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#logout" class="nav-link logout">
+                        🚪 Выход
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Управление заказами</h1>
+                <div class="header-actions">
+                    <button class="btn-export" id="exportBtn">📥 Экспорт</button>
+                    <button class="btn-refresh" id="refreshBtn">🔄 Обновить</button>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- Фильтры -->
+                <div class="filters-panel">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label for="statusFilter">Статус:</label>
+                            <select id="statusFilter" class="filter-select">
+                                <option value="">Все статусы</option>
+                                <option value="new">Новые</option>
+                                <option value="processing">В обработке</option>
+                                <option value="completed">Выполненные</option>
+                                <option value="cancelled">Отмененные</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="dateFrom">С даты:</label>
+                            <input type="date" id="dateFrom" class="filter-input">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="dateTo">По дату:</label>
+                            <input type="date" id="dateTo" class="filter-input">
+                        </div>
+
+                        <div class="filter-actions">
+                            <button class="btn-filter" id="applyFilters">Применить</button>
+                            <button class="btn-clear" id="clearFilters">Очистить</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Таблица заказов -->
+                <div class="orders-container">
+                    <div class="orders-header">
+                        <h3>Список заказов</h3>
+                        <div class="orders-count" id="ordersCount">Загрузка...</div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="orders-table" id="ordersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Дата</th>
+                                    <th>Товар</th>
+                                    <th>Клиент</th>
+                                    <th>Цена</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <tr>
+                                    <td colspan="7" class="loading-row">
+                                        <div class="loading-spinner"></div>
+                                        Загрузка заказов...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Пагинация -->
+                    <div class="pagination" id="pagination">
+                        <!-- Кнопки пагинации будут добавлены через JS -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно просмотра заказа -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Детали заказа</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+
+            <div class="modal-body" id="modalBody">
+                <!-- Контент будет загружен через JS -->
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" id="modalCancel">Закрыть</button>
+                <button class="btn-primary" id="modalSave">Сохранить изменения</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/admin/js/modal-component.js"></script>
+    <script src="/admin/js/orders.js"></script>
+</body>
+
+</html>

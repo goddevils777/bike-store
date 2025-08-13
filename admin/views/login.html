@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход в админку - ReBike</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚴</text></svg>">
+    <link rel="stylesheet" href="/admin/css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">🚴</div>
+        <h1 class="title">ReBike Admin</h1>
+        <p class="subtitle">Введите пин-код для входа</p>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label" for="pinCode">Пин-код</label>
+                <input 
+                    type="password" 
+                    id="pinCode" 
+                    class="form-input" 
+                    placeholder="••••"
+                    maxlength="6"
+                    autocomplete="off"
+                    required
+                >
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">
+                Войти в админку
+            </button>
+            
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        </form>
+        
+        <div class="security-note">
+            🔒 Защищенный доступ к панели администратора
+        </div>
+    </div>
+
+    <script src="/admin/js/login.js"></script>
+</body>
+</html>
