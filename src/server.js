@@ -61,6 +61,7 @@ app.use('/admin', adminSettingsRoutes);
 class ShopServer {
   constructor() {
     this.dataFile = path.join(__dirname, '../data/products.json');
+    this.allProductsCache = null; // ДОБАВИТЬ ЭТУ СТРОКУ
     this.setupRoutes();
   }
 
@@ -73,53 +74,162 @@ class ShopServer {
     }
   }
 
+
+  async loadCategoryProducts(categoryName) {
+    try {
+      const filePath = path.join(__dirname, `../data/products_${categoryName}.json`);
+      console.log(`🔍 Пытаемся загрузить: ${filePath}`);
+
+      const data = await fs.readFile(filePath, 'utf8');
+      const products = JSON.parse(data);
+
+      console.log(`✅ Загружено ${products.length} товаров из ${categoryName}`);
+      return products;
+    } catch (error) {
+      console.log(`❌ Не удалось загрузить ${categoryName}: ${error.message}`);
+      return [];
+    }
+  }
+
+  async loadAllProducts() {
+    const targetCategories = [
+      'sales', 'all', 'trekking', 'city', 'urban', 'mountain', 'hardtail',
+      'fully', 'cargo', 'speed', 'gravel', 'kids', 'classic'
+    ];
+
+    let allProducts = [];
+
+    for (const categoryName of targetCategories) {
+      try {
+        const categoryProducts = await this.loadCategoryProducts(categoryName);
+        if (categoryProducts.length > 0) {
+          console.log(`📂 Загружена категория ${categoryName}: ${categoryProducts.length} товаров`);
+          allProducts.push(...categoryProducts);
+        } else {
+          console.log(`⚠️ Категория ${categoryName}: файл пустой или не найден`);
+        }
+      } catch (error) {
+        console.error(`❌ Ошибка загрузки категории ${categoryName}:`, error.message);
+      }
+    }
+
+    console.log(`📦 Загружено ${allProducts.length} товаров из всех категорий`);
+    return allProducts;
+  }
+
   setupRoutes() {
-    // API для получения товаров
+
+    // API для получения одного товара
+
+
+
+
     app.get('/api/products', async (req, res) => {
       try {
-        const products = await this.loadProducts();
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const search = req.query.search || '';
+        const { category, page = 1, limit = 24, search = '' } = req.query;
+        console.log(`🔍 API запрос: категория="${category}", страница=${page}, лимит=${limit}`);
 
-        let filteredProducts = products;
+        let allProducts;
 
-        // Поиск
-        if (search) {
-          filteredProducts = products.filter(product =>
-            product.title.toLowerCase().includes(search.toLowerCase())
-          );
+        if (!category || category === 'undefined') {
+          console.log(`📦 Категория не указана, загружаем 'all'...`);
+          allProducts = await this.loadCategoryProducts('all');
+        } else {
+          allProducts = await this.loadCategoryProducts(category);
+          console.log(`📂 Загружена категория ${category}: ${allProducts.length} товаров`);
         }
 
-        // Пагинация
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-        const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+        // Применяем поиск КО ВСЕМ товарам
+        let filteredProducts = allProducts;
+        if (search) {
+          filteredProducts = allProducts.filter(product =>
+            product.title.toLowerCase().includes(search.toLowerCase())
+          );
+          console.log(`🔍 После поиска "${search}": ${filteredProducts.length} из ${allProducts.length} товаров`);
+        }
+
+        // СЕРВЕРНАЯ ПАГИНАЦИЯ - берем только нужную страницу
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const totalProducts = filteredProducts.length;
+        const totalPages = Math.ceil(totalProducts / limitNum);
+
+        const startIndex = (pageNum - 1) * limitNum;
+        const endIndex = startIndex + limitNum;
+        const pageProducts = filteredProducts.slice(startIndex, endIndex);
+
+        console.log(`📄 Страница ${pageNum}/${totalPages}: товары ${startIndex + 1}-${Math.min(endIndex, totalProducts)} из ${totalProducts}`);
 
         res.json({
-          products: paginatedProducts,
-          total: filteredProducts.length,
-          page,
-          totalPages: Math.ceil(filteredProducts.length / limit)
+          products: pageProducts, // Только 24 товара текущей страницы
+          pagination: {
+            currentPage: pageNum,
+            totalPages: totalPages, // Все страницы (например 52 для 1250 товаров)
+            totalProducts: totalProducts, // Общее количество товаров в категории
+            productsPerPage: limitNum,
+            hasNextPage: pageNum < totalPages,
+            hasPrevPage: pageNum > 1,
+            startIndex: startIndex + 1,
+            endIndex: Math.min(endIndex, totalProducts)
+          }
         });
       } catch (error) {
+        console.error('Ошибка API товаров:', error);
         res.status(500).json({ error: 'Ошибка загрузки товаров' });
       }
     });
 
-    // API для получения одного товара
     app.get('/api/products/:id', async (req, res) => {
       try {
-        const products = await this.loadProducts();
-        const product = products.find(p => p.id === req.params.id);
+        console.log(`🔍 Ищем товар с ID: "${req.params.id}"`);
+
+        // Кешируем все товары при первом запросе
+        if (!this.allProductsCache) {
+          console.log(`📦 Загружаем кеш всех товаров...`);
+          this.allProductsCache = await this.loadAllProducts();
+          console.log(`✅ Загружено в кеш: ${this.allProductsCache.length} товаров`);
+        }
+
+        const product = this.allProductsCache.find(p => p.id === req.params.id);
 
         if (!product) {
+          console.log(`❌ Товар с ID "${req.params.id}" не найден`);
+          // Сбрасываем кеш и пробуем еще раз
+          this.allProductsCache = null;
           return res.status(404).json({ error: 'Товар не найден' });
         }
 
+        console.log(`✅ Товар найден: ${product.title}`);
         res.json(product);
       } catch (error) {
+        console.error('Ошибка поиска товара:', error);
         res.status(500).json({ error: 'Ошибка загрузки товара' });
+      }
+    });
+
+
+    app.get('/api/categories', async (req, res) => {
+      try {
+        const targetCategories = [
+          'sales', 'all', 'trekking-city', 'trekking', 'city', 'urban',
+          'mountain', 'hardtail', 'fully', 'cargo', 'speed', 'gravel', 'kids', 'classic'
+        ];
+
+        const categoriesWithCount = [];
+
+        for (const categoryName of targetCategories) {
+          const products = await this.loadCategoryProducts(categoryName);
+          categoriesWithCount.push({
+            name: categoryName,
+            count: products.length,
+            available: products.length > 0
+          });
+        }
+
+        res.json(categoriesWithCount);
+      } catch (error) {
+        console.error('Ошибка загрузки категорий:', error);
+        res.status(500).json({ error: 'Ошибка загрузки категорий' });
       }
     });
 
@@ -168,8 +278,10 @@ class ShopServer {
         }
 
         // Находим товар
-        const products = await this.loadProducts();
-        const product = products.find(p => p.id === productId);
+if (!this.allProductsCache) {
+  this.allProductsCache = await this.loadAllProducts();
+}
+const product = this.allProductsCache.find(p => p.id === productId);
 
         if (!product) {
           return res.status(404).json({ error: 'Товар не найден' });

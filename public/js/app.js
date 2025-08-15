@@ -35,108 +35,108 @@ class ShopApp {
     }
 
     // ЗАМЕНИТЬ МЕТОД loadMarkup НА:
-async loadMarkup() {
-    try {
-        const response = await fetch('/api/markup');
-        if (response.ok) {
-            const data = await response.json();
-            this.currentMarkup = parseFloat(data.markup) || 0;
-            console.log(`💰 ОТЛАДКА: Загружена наценка из API: ${data.markup}% (тип: ${typeof data.markup})`);
-            console.log(`💰 ОТЛАДКА: Обработанная наценка: ${this.currentMarkup}% (тип: ${typeof this.currentMarkup})`);
+    async loadMarkup() {
+        try {
+            const response = await fetch('/api/markup');
+            if (response.ok) {
+                const data = await response.json();
+                this.currentMarkup = parseFloat(data.markup) || 0;
+                console.log(`💰 ОТЛАДКА: Загружена наценка из API: ${data.markup}% (тип: ${typeof data.markup})`);
+                console.log(`💰 ОТЛАДКА: Обработанная наценка: ${this.currentMarkup}% (тип: ${typeof this.currentMarkup})`);
+                this.recalculatePrices();
+            }
+        } catch (error) {
+            console.log('Не удалось загрузить наценку');
+            this.currentMarkup = 0;
             this.recalculatePrices();
         }
-    } catch (error) {
-        console.log('Не удалось загрузить наценку');
-        this.currentMarkup = 0;
-        this.recalculatePrices();
     }
-}
 
 
     // ЗАМЕНИТЬ МЕТОД recalculatePrices НА:
     recalculatePrices() {
-    console.log(`🔧 ОТЛАДКА: Пересчет цен с наценкой ${this.currentMarkup}%`);
-    
-    // Берем первый товар для примера
-    if (this.allProducts.length > 0) {
-        const firstProduct = this.allProducts[0];
-        console.log(`📦 ОТЛАДКА первого товара ПЕРЕД пересчетом:`, {
-            title: firstProduct.title?.substring(0, 30),
-            originalPriceEur: firstProduct.originalPriceEur,
-            currentPriceEur: firstProduct.currentPriceEur,
-            originalBasePriceEur: firstProduct.originalBasePriceEur,
-            currentBasePriceEur: firstProduct.currentBasePriceEur,
-            priceRub: firstProduct.priceRub
-        });
-    }
-    
-    // Пересчитываем цены для всех товаров
-    this.allProducts.forEach((product, index) => {
-        // Логируем только первые 3 товара для примера
-        if (index < 3) {
-            console.log(`🔧 ОТЛАДКА товара ${index + 1} - обработка...`);
-        }
-        
-        // Используем базовые цены если они есть
-        let originalBasePrice = product.originalBasePriceEur;
-        let currentBasePrice = product.currentBasePriceEur;
-        
-        // Если базовых цен нет, пытаемся извлечь из строк
-        if (!originalBasePrice && product.originalPriceEur) {
-            originalBasePrice = this.extractPrice(product.originalPriceEur);
-        }
-        if (!currentBasePrice && product.currentPriceEur) {
-            currentBasePrice = this.extractPrice(product.currentPriceEur);
-        }
-        
-        if (index < 3) {
-            console.log(`💰 ОТЛАДКА товара ${index + 1} - базовые цены:`, {
-                originalBasePrice,
-                currentBasePrice,
-                markup: this.currentMarkup
+        console.log(`🔧 ОТЛАДКА: Пересчет цен с наценкой ${this.currentMarkup}%`);
+
+        // Берем первый товар для примера
+        if (this.allProducts.length > 0) {
+            const firstProduct = this.allProducts[0];
+            console.log(`📦 ОТЛАДКА первого товара ПЕРЕД пересчетом:`, {
+                title: firstProduct.title?.substring(0, 30),
+                originalPriceEur: firstProduct.originalPriceEur,
+                currentPriceEur: firstProduct.currentPriceEur,
+                originalBasePriceEur: firstProduct.originalBasePriceEur,
+                currentBasePriceEur: firstProduct.currentBasePriceEur,
+                priceRub: firstProduct.priceRub
             });
         }
-        
-        if (currentBasePrice) {
-            // ПРОВЕРЯЕМ: если наценка 0% - используем оригинальные цены
-            if (this.currentMarkup === 0) {
-                product.priceRub = `${currentBasePrice} €`;
-                if (originalBasePrice) {
-                    product.originalPriceRub = `${originalBasePrice} €`;
+
+        // Пересчитываем цены для всех товаров
+        this.allProducts.forEach((product, index) => {
+            // Логируем только первые 3 товара для примера
+            if (index < 3) {
+                console.log(`🔧 ОТЛАДКА товара ${index + 1} - обработка...`);
+            }
+
+            // Используем базовые цены если они есть
+            let originalBasePrice = product.originalBasePriceEur;
+            let currentBasePrice = product.currentBasePriceEur;
+
+            // Если базовых цен нет, пытаемся извлечь из строк
+            if (!originalBasePrice && product.originalPriceEur) {
+                originalBasePrice = this.extractPrice(product.originalPriceEur);
+            }
+            if (!currentBasePrice && product.currentPriceEur) {
+                currentBasePrice = this.extractPrice(product.currentPriceEur);
+            }
+
+            if (index < 3) {
+                console.log(`💰 ОТЛАДКА товара ${index + 1} - базовые цены:`, {
+                    originalBasePrice,
+                    currentBasePrice,
+                    markup: this.currentMarkup
+                });
+            }
+
+            if (currentBasePrice) {
+                // ПРОВЕРЯЕМ: если наценка 0% - используем оригинальные цены
+                if (this.currentMarkup === 0) {
+                    product.priceRub = `${currentBasePrice} €`;
+                    if (originalBasePrice) {
+                        product.originalPriceRub = `${originalBasePrice} €`;
+                    }
+                    if (index < 3) {
+                        console.log(`✅ ОТЛАДКА товара ${index + 1} - наценка 0%, цена:`, product.priceRub);
+                    }
+                } else {
+                    // Применяем наценку только если она больше 0
+                    const newCurrentPrice = Math.round(currentBasePrice * (1 + this.currentMarkup / 100));
+                    product.priceRub = `${newCurrentPrice} €`;
+
+                    if (originalBasePrice) {
+                        const newOriginalPrice = Math.round(originalBasePrice * (1 + this.currentMarkup / 100));
+                        product.originalPriceRub = `${newOriginalPrice} €`;
+                    }
+                    if (index < 3) {
+                        console.log(`💸 ОТЛАДКА товара ${index + 1} - наценка ${this.currentMarkup}%, новая цена:`, product.priceRub);
+                    }
                 }
-                if (index < 3) {
-                    console.log(`✅ ОТЛАДКА товара ${index + 1} - наценка 0%, цена:`, product.priceRub);
-                }
-            } else {
-                // Применяем наценку только если она больше 0
-                const newCurrentPrice = Math.round(currentBasePrice * (1 + this.currentMarkup / 100));
-                product.priceRub = `${newCurrentPrice} €`;
-                
-                if (originalBasePrice) {
-                    const newOriginalPrice = Math.round(originalBasePrice * (1 + this.currentMarkup / 100));
-                    product.originalPriceRub = `${newOriginalPrice} €`;
-                }
-                if (index < 3) {
-                    console.log(`💸 ОТЛАДКА товара ${index + 1} - наценка ${this.currentMarkup}%, новая цена:`, product.priceRub);
+
+                // Пересчитываем скидку между БАЗОВЫМИ ценами (всегда одинаково)
+                if (originalBasePrice && originalBasePrice > currentBasePrice) {
+                    product.discountPercent = Math.round((1 - currentBasePrice / originalBasePrice) * 100);
+                } else {
+                    product.discountPercent = 0;
                 }
             }
-            
-            // Пересчитываем скидку между БАЗОВЫМИ ценами (всегда одинаково)
-            if (originalBasePrice && originalBasePrice > currentBasePrice) {
-                product.discountPercent = Math.round((1 - currentBasePrice / originalBasePrice) * 100);
-            } else {
-                product.discountPercent = 0;
-            }
+        });
+
+        console.log(`🏁 ОТЛАДКА: Пересчет завершен, перерендериваем товары...`);
+
+        // Перерендериваем товары если они уже загружены
+        if (this.filteredProducts && this.filteredProducts.length > 0) {
+            this.renderProducts();
         }
-    });
-    
-    console.log(`🏁 ОТЛАДКА: Пересчет завершен, перерендериваем товары...`);
-    
-    // Перерендериваем товары если они уже загружены
-    if (this.filteredProducts && this.filteredProducts.length > 0) {
-        this.renderProducts();
     }
-}
 
     updateContactsUI(contacts) {
         // Обновляем контакты в шапке
@@ -297,57 +297,56 @@ async loadMarkup() {
 
 
 
-    async loadAllProducts() {
+    async loadAllProducts(page = 1) {
         try {
             this.showLoading();
 
-            const response = await fetch('/api/products?limit=1000');
+            const category = this.activeCategory || 'all';
+            const searchQuery = this.currentSearch || '';
+
+            console.log(`🔍 ОТЛАДКА фронтенд: загружаем категорию "${category}", страница ${page}`);
+
+            const params = new URLSearchParams({
+                category: category,
+                page: page,
+                limit: 24
+            });
+
+            if (searchQuery) {
+                params.append('search', searchQuery);
+            }
+
+            const response = await fetch(`/api/products?${params}`);
 
             if (!response.ok) {
                 throw new Error('Ошибка загрузки товаров');
             }
 
             const data = await response.json();
-            this.allProducts = data.products;
+            console.log('🔍 Полученные данные от сервера:', data);
+            console.log('🔍 Пагинация от сервера:', data.pagination);
 
-            // Диагностика дублей
-            console.log('🔍 Диагностика дублей:');
-            console.log(`Всего товаров загружено: ${this.allProducts.length}`);
+            // Теперь получаем только товары текущей страницы
+            this.allProducts = data.products || [];
+            this.filteredProducts = data.products || [];
 
-            // Проверяем дубли по URL
-            const urlCounts = {};
-            this.allProducts.forEach(product => {
-                urlCounts[product.url] = (urlCounts[product.url] || 0) + 1;
-            });
-
-            const duplicates = Object.entries(urlCounts).filter(([url, count]) => count > 1);
-            if (duplicates.length > 0) {
-                console.log(`❌ Найдено ${duplicates.length} дублированных URL:`);
-                duplicates.slice(0, 5).forEach(([url, count]) => {
-                    console.log(`  ${count}x: ${url}`);
-                });
+            // Обновляем информацию о пагинации с проверкой
+            if (data.pagination) {
+                this.currentPage = data.pagination.currentPage;
+                this.totalPages = data.pagination.totalPages;
+                console.log(`📄 Пагинация: страница ${this.currentPage}/${this.totalPages}`);
             } else {
-                console.log('✅ Дублей по URL не найдено');
+                // Fallback для старого формата ответа
+                this.currentPage = page;
+                this.totalPages = data.totalPages || 1;
+                console.log(`📄 Fallback пагинация: страница ${this.currentPage}/${this.totalPages}`);
             }
 
-            // Проверяем дубли по ID
-            const idCounts = {};
-            this.allProducts.forEach(product => {
-                idCounts[product.id] = (idCounts[product.id] || 0) + 1;
-            });
+            console.log(`📄 Загружена страница ${this.currentPage}/${this.totalPages} (${this.allProducts.length} товаров)`);
 
-            const idDuplicates = Object.entries(idCounts).filter(([id, count]) => count > 1);
-            if (idDuplicates.length > 0) {
-                console.log(`❌ Найдено ${idDuplicates.length} дублированных ID:`);
-                idDuplicates.slice(0, 5).forEach(([id, count]) => {
-                    console.log(`  ${count}x: ${id}`);
-                });
-            } else {
-                console.log('✅ Дублей по ID не найдено');
-            }
-
-
-            this.buildDynamicFilters();
+            this.renderProducts();
+            this.renderPagination();
+            this.updateProductsCount(data.pagination ? data.pagination.totalProducts : (data.total || this.allProducts.length));
             this.hideLoading();
 
         } catch (error) {
@@ -356,65 +355,54 @@ async loadMarkup() {
         }
     }
 
+
+
     applyFilters() {
         let filtered = [...this.allProducts];
 
-        // Сначала убираем дубли по ID из исходного массива
-        const seenIds = new Set();
-        filtered = filtered.filter(product => {
-            if (seenIds.has(product.id)) {
-                console.log(`🔄 Убираем дубль: ${product.title} (${product.id})`);
-                return false;
-            }
-            seenIds.add(product.id);
-            return true;
-        });
-
-        console.log(`После удаления дублей: ${filtered.length} товаров`);
+        console.log(`Применяем фильтры к ${filtered.length} товарам`);
 
         // Фильтр по категории
-        if (this.activeCategory !== 'all') {
-            filtered = filtered.filter(product => {
-                if (!product.category) return false;
+        // Фильтр по категории
+        filtered = filtered.filter(product => {
+            if (!product.category) return false;
 
-                const category = product.category;
-                const title = product.title ? product.title.toLowerCase() : '';
+            const category = product.category;
+            const title = product.title ? product.title.toLowerCase() : '';
 
-                switch (this.activeCategory) {
-                    case 'sales':
-                        return product.discountPercent > 0 || category === 'sales';
-                    case 'gebraucht':
-                        return category === 'gebraucht' || title.includes('gebraucht') || title.includes('used');
-                    case 'trekking-city':
-                        return category === 'trekking-city' || category === 'trekking' || category === 'city';
-                    case 'trekking':
-                        return category === 'trekking' || title.includes('trekking') || title.includes('touren');
-                    case 'city':
-                        return category === 'city' || title.includes('city');
-                    case 'urban':
-                        return category === 'urban' || title.includes('urban');
-                    case 'mountain':
-                        return category === 'mountain' || category === 'hardtail' || category === 'fully' ||
-                            title.includes('mountain') || title.includes('mtb');
-                    case 'hardtail':
-                        return category === 'hardtail' || title.includes('hardtail');
-                    case 'fully':
-                        return category === 'fully' || title.includes('fully');
-                    case 'cargo':
-                        return category === 'cargo' || title.includes('lastenrad') || title.includes('cargo');
-                    case 'speed':
-                        return category === 'speed' || title.includes('s-pedelec') || title.includes('speed');
-                    case 'gravel':
-                        return category === 'gravel' || title.includes('gravel') || title.includes('renn');
-                    case 'kids':
-                        return category === 'kids' || title.includes('kinder') || title.includes('kids');
-                    case 'classic':
-                        return category === 'classic' || (!title.includes('e-bike') && !title.includes('electric'));
-                    default:
-                        return category === this.activeCategory;
-                }
-            });
-        }
+            switch (this.activeCategory) {
+                case 'sales':
+                    return category === 'sales';
+                case 'all':
+                    return category === 'all';
+                case 'trekking-city':
+                    return category === 'trekking-city';
+                case 'trekking':
+                    return category === 'trekking';
+                case 'city':
+                    return category === 'city';
+                case 'urban':
+                    return category === 'urban';
+                case 'mountain':
+                    return category === 'mountain';
+                case 'hardtail':
+                    return category === 'hardtail';
+                case 'fully':
+                    return category === 'fully';
+                case 'cargo':
+                    return category === 'cargo';
+                case 'speed':
+                    return category === 'speed';
+                case 'gravel':
+                    return category === 'gravel';
+                case 'kids':
+                    return category === 'kids';
+                case 'classic':
+                    return category === 'classic';
+                default:
+                    return category === this.activeCategory;
+            }
+        });
 
         // Поиск
         if (this.currentSearch) {
@@ -484,8 +472,6 @@ async loadMarkup() {
 
         this.filteredProducts = filtered;
         this.applySorting();
-        this.renderProducts();
-        this.updateProductsCount(filtered.length);
     }
 
     getCheckedFilters(filterIds) {
@@ -529,64 +515,58 @@ async loadMarkup() {
 
     renderProducts() {
         const grid = document.getElementById('productsGrid');
-        const productsPerPage = 12;
-        const startIndex = (this.currentPage - 1) * productsPerPage;
-        const endIndex = startIndex + productsPerPage;
-        const pageProducts = this.filteredProducts.slice(startIndex, endIndex);
 
-        this.totalPages = Math.ceil(this.filteredProducts.length / productsPerPage);
+        // Используем ВСЕ товары (уже только 24 со страницы)
+        const pageProducts = this.allProducts;
 
         if (pageProducts.length === 0) {
             grid.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #718096;">
-                <h3 style="margin-bottom: 12px; color: #4a5568;">Товары не найдены</h3>
-                <p>Попробуйте изменить фильтры или поисковый запрос</p>
-            </div>
-        `;
+      <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #718096;">
+        <h3 style="margin-bottom: 12px; color: #4a5568;">Товары не найдены</h3>
+        <p>Попробуйте изменить фильтры или поисковый запрос</p>
+      </div>
+    `;
             document.getElementById('pagination').innerHTML = '';
             return;
         }
 
         grid.innerHTML = pageProducts.map(product => {
             return `
-            <div class="product-card" data-product-id="${product.id}">
-                <img src="${this.sanitizeImageUrl(product.imageUrl)}" 
-                    alt="${this.escapeHtml(product.title)}" 
-                    class="product-image"
-                    onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDI4MCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjdGQUZDIi8+Cjx0ZXh0IHg9IjE0MCIgeT0iMTA1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNzE4MDk2IiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4='" />
-                
-                <div class="product-info">
-                    <div class="product-content">
-                        <h3 class="product-title">${this.escapeHtml(product.title)}</h3>
-                        
-                        <div class="product-prices">
-                            <span class="current-price">${this.escapeHtml(product.priceRub || 'Цена не указана')}</span>
-                            ${product.originalPriceRub && product.originalPriceRub !== product.priceRub ? `<span class="original-price">${this.escapeHtml(product.originalPriceRub)}</span>` : ''}
-                        </div>
-
-                        ${product.discountPercent > 0 ? `
-                            <div class="discount-info">
-                                <span class="discount-badge">-${product.discountPercent}%</span>
-                                ${this.calculateSavings(product.originalPriceRub, product.priceRub) ? `<span class="savings-amount">-${this.calculateSavings(product.originalPriceRub, product.priceRub)}</span>` : ''}
-                            </div>
-                        ` : ''}
-                    </div>
-                    
-                    <button class="btn-order" data-product-id="${product.id}">
-                        Заказать
-                    </button>
-                </div>
+      <div class="product-card" data-product-id="${product.id}">
+        <img src="${this.sanitizeImageUrl(product.imageUrl)}" 
+            alt="${this.escapeHtml(product.title)}" 
+            class="product-image"
+            onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDI4MCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjdGQUZDIi8+Cjx0ZXh0IHg9IjE0MCIgeT0iMTA1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNzE4MDk2IiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4='" />
+        
+        <div class="product-info">
+          <div class="product-content">
+            <h3 class="product-title">${this.escapeHtml(product.title)}</h3>
+            
+            <div class="product-prices">
+              <span class="current-price">${this.escapeHtml(product.priceRub || 'Цена не указана')}</span>
+              ${product.originalPriceRub && product.originalPriceRub !== product.priceRub ? `<span class="original-price">${this.escapeHtml(product.originalPriceRub)}</span>` : ''}
             </div>
-        `;
+
+            ${product.discountPercent > 0 ? `
+              <div class="discount-info">
+                <span class="discount-badge">-${product.discountPercent}%</span>
+                ${this.calculateSavings(product.originalPriceRub, product.priceRub) ? `<span class="savings-amount">-${this.calculateSavings(product.originalPriceRub, product.priceRub)}</span>` : ''}
+              </div>
+            ` : ''}
+          </div>
+          
+          <button class="btn-order" data-product-id="${product.id}">
+            Заказать
+          </button>
+        </div>
+      </div>
+    `;
         }).join('');
 
         // Добавляем обработчики событий для карточек товаров
         document.querySelectorAll('.product-card').forEach(card => {
             const productId = card.getAttribute('data-product-id');
-
-            // Клик по карточке - переход на страницу товара
             card.addEventListener('click', (e) => {
-                // Проверяем что клик НЕ по кнопке заказа
                 if (!e.target.classList.contains('btn-order')) {
                     window.location.href = `product.html?id=${productId}`;
                 }
@@ -602,10 +582,13 @@ async loadMarkup() {
             });
         });
 
+        // ВАЖНО: рендерим пагинацию ПОСЛЕ товаров
         this.renderPagination();
     }
 
     renderPagination() {
+        console.log(`🔢 Рендерим пагинацию: страница ${this.currentPage} из ${this.totalPages}`);
+
         const pagination = document.getElementById('pagination');
 
         if (this.totalPages <= 1) {
@@ -687,10 +670,10 @@ async loadMarkup() {
     goToPage(page) {
         if (page < 1 || page > this.totalPages) return;
 
-        this.currentPage = page;
-        this.renderProducts();
+        console.log(`📄 Переход на страницу ${page}`);
+        this.loadAllProducts(page);
 
-        // Плавная прокрутка вверх
+        // Прокрутка вверх
         const mainLayout = document.getElementById('mainLayout');
         if (mainLayout) {
             mainLayout.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -700,8 +683,8 @@ async loadMarkup() {
     searchProducts() {
         const searchInput = document.getElementById('searchInput');
         this.currentSearch = searchInput.value.trim();
-        this.currentPage = 1;
-        this.applyFilters();
+        this.currentPage = 1; // Сбрасываем на первую страницу при поиске
+        this.loadAllProducts(1);
     }
 
     sortProducts() {
@@ -1105,25 +1088,53 @@ async loadMarkup() {
         });
     }
 
+    handleCategoryClick(category) {
+        console.log(`🎯 ОТЛАДКА: выбрана категория "${category}"`);
+        this.activeCategory = category;
+        this.currentPage = 1; // Сбрасываем на первую страницу
+        this.currentSearch = ''; // Сбрасываем поиск
+
+        // Очищаем поле поиска
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+
+        this.loadAllProducts(1); // Загружаем первую страницу новой категории
+    }
+
 
 }
 
 // Глобальные функции
 function searchProducts() {
-    app.searchProducts();
+    if (window.app) window.app.searchProducts();
 }
 
 function sortProducts() {
-    app.sortProducts();
+    if (window.app) window.app.sortProducts();
 }
 
 function clearAllFilters() {
-    app.clearAllFilters();
+    if (window.app) window.app.clearAllFilters();
 }
 
 function closeModal() {
-    app.closeModal();
+    if (window.app) window.app.closeModal();
 }
 
-// Инициализация
-const app = new ShopApp();
+
+document.addEventListener('DOMContentLoaded', () => {
+    window.app = new ShopApp(); // ✅ ПРАВИЛЬНЫЙ КЛАСС
+
+    // Глобальные функции для HTML
+    window.handleCategoryClick = (category) => {
+        console.log(`🌍 Глобальный handleCategoryClick: "${category}"`);
+        if (window.app) {
+            window.app.handleCategoryClick(category);
+        }
+    };
+
+    console.log('✅ Приложение и глобальные функции инициализированы');
+});
+

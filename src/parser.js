@@ -13,6 +13,48 @@ class ReBikeParser {
     this.changesFile = path.join(__dirname, '../data/changes.json');
   }
 
+  getCategoryFilePath(categoryName) {
+  return path.join(__dirname, `../data/products_${categoryName}.json`);
+}
+
+async loadCategoryProducts(categoryName) {
+  try {
+    const filePath = this.getCategoryFilePath(categoryName);
+    const data = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(data);
+  } catch {
+    return []; // файл не существует
+  }
+}
+
+async saveCategoryProducts(categoryName, products) {
+  try {
+    const filePath = this.getCategoryFilePath(categoryName);
+    await fs.writeFile(filePath, JSON.stringify(products, null, 2));
+    console.log(`💾 Сохранено ${products.length} товаров в ${filePath}`);
+  } catch (error) {
+    console.error(`❌ Ошибка сохранения категории ${categoryName}:`, error);
+  }
+}
+
+async saveIncrementalCategoryProducts(categoryName, newProducts) {
+  try {
+    // Загружаем существующие товары категории
+    const existingProducts = await this.loadCategoryProducts(categoryName);
+    
+    // Объединяем с новыми
+    const allProducts = [...existingProducts, ...newProducts];
+    
+    // Сохраняем в файл категории
+    await this.saveCategoryProducts(categoryName, allProducts);
+    
+    return allProducts;
+  } catch (error) {
+    console.error(`❌ Ошибка инкрементального сохранения ${categoryName}:`, error);
+    return [];
+  }
+}
+
   async init() {
     // Создаем папку data если её нет
     await fs.mkdir(path.dirname(this.dataFile), { recursive: true });
@@ -98,6 +140,8 @@ class ReBikeParser {
 
     return changes;
   }
+
+
   async parseFullUpdate() {
     console.log('Начинаем полное обновление каталога...');
 
@@ -150,62 +194,102 @@ class ReBikeParser {
     };
   }
 
-  async parseAllProducts() {
-    // Очищаем массив в начале
-    this.allProducts = [];
+  async saveIncrementalProducts(newProducts) {
+    try {
+      // Загружаем существующие товары
+      const existingProducts = await this.loadExistingProducts();
 
-    const targetCategories = [
-      { url: 'https://rebike.com/de/rebike1-sales-e-bike-angebote', type: 'sales' },
-      { url: 'https://rebike.com/de/gebrauchte-e-bikes-und-pedelecs-kaufen', type: 'gebraucht' },
-      { url: 'https://rebike.com/de/e-bike-kaufen/trekking-city', type: 'trekking-city' },
-      { url: 'https://rebike.com/de/trekkingrad-touren-e-bike-kaufen', type: 'trekking' },
-      { url: 'https://rebike.com/de/city-e-bikes', type: 'city' },
-      { url: 'https://rebike.com/de/urban-e-bikes', type: 'urban' },
-      { url: 'https://rebike.com/de/e-mountainbikes', type: 'mountain' },
-      { url: 'https://rebike.com/de/e-mountainbikes/e-bike-hardtail', type: 'hardtail' },
-      { url: 'https://rebike.com/de/e-mountainbikes/e-bike-fully', type: 'fully' },
-      { url: 'https://rebike.com/de/e-lastenrad-e-bike-kaufen', type: 'cargo' },
-      { url: 'https://rebike.com/de/s-pedelecs', type: 'speed' },
-      { url: 'https://rebike.com/de/e-gravel-rennraeder', type: 'gravel' },
-      { url: 'https://rebike.com/de/kinder-e-bikes', type: 'kids' },
-      { url: 'https://rebike.com/de/fahrraeder', type: 'classic' }
-    ];
+      // Объединяем с новыми (новые добавляются в конец)
+      const allProducts = [...existingProducts, ...newProducts];
 
-    console.log(`🎯 Будем парсить ${targetCategories.length} целевых категорий`);
+      // Сохраняем объединенный список
+      await this.saveProducts(allProducts);
+      console.log(`💾 Сохранено ${allProducts.length} товаров (добавлено ${newProducts.length} новых)`);
 
-    // Парсим каждую целевую категорию
-    for (const category of targetCategories.slice(0, 5)) {
-      console.log(`\n📂 Парсим категорию: ${category.type}`);
-      console.log(`🔗 URL: ${category.url}`);
-
-      try {
-        const categoryProducts = await this.parseCategory(category.url, category.type);
-
-        // Принудительно устанавливаем правильную категорию
-        categoryProducts.forEach(product => {
-          product.category = category.type;
-        });
-
-        // Убираем дубликаты ВНУТРИ этой категории по URL
-        const uniqueCategoryProducts = this.removeDuplicatesInCategory(categoryProducts);
-
-        this.allProducts.push(...uniqueCategoryProducts);
-        console.log(`✅ Добавлено ${uniqueCategoryProducts.length} уникальных товаров в категорию ${category.type}`);
-        if (categoryProducts.length !== uniqueCategoryProducts.length) {
-          console.log(`   Убрано ${categoryProducts.length - uniqueCategoryProducts.length} дубликатов в категории`);
-        }
-
-        await this.delay(this.config.delay);
-      } catch (error) {
-        console.error(`❌ Ошибка парсинга категории ${category.type}:`, error.message);
-      }
+      return allProducts;
+    } catch (error) {
+      console.error(`❌ Ошибка сохранения товаров:`, error);
+      return [];
     }
+  }
+async parseAllProducts() {
+  this.allProducts = [];
+  
+  const targetCategories = [
+    { url: 'https://rebike.com/de/rebike1-sales-e-bike-angebote', type: 'sales' },
+    { url: 'https://rebike.com/de/gebrauchte-e-bikes-und-pedelecs-kaufen', type: 'all' },
+    { url: 'https://rebike.com/de/e-bike-kaufen/trekking-city', type: 'trekking-city' },
+    { url: 'https://rebike.com/de/trekkingrad-touren-e-bike-kaufen', type: 'trekking' },
+    { url: 'https://rebike.com/de/city-e-bikes', type: 'city' },
+    { url: 'https://rebike.com/de/urban-e-bikes', type: 'urban' },
+    { url: 'https://rebike.com/de/e-mountainbikes', type: 'mountain' },
+    { url: 'https://rebike.com/de/e-mountainbikes/e-bike-hardtail', type: 'hardtail' },
+    { url: 'https://rebike.com/de/e-mountainbikes/e-bike-fully', type: 'fully' },
+    { url: 'https://rebike.com/de/e-lastenrad-e-bike-kaufen', type: 'cargo' },
+    { url: 'https://rebike.com/de/s-pedelecs', type: 'speed' },
+    { url: 'https://rebike.com/de/e-gravel-rennraeder', type: 'gravel' },
+    { url: 'https://rebike.com/de/kinder-e-bikes', type: 'kids' },
+    { url: 'https://rebike.com/de/fahrraeder', type: 'classic' }
+  ];
 
-    console.log(`\n📊 Всего товаров собрано: ${this.allProducts.length}`);
-
-    return this.processProducts(this.allProducts);
+  // ОПРЕДЕЛЯЕМ ПОЗИЦИЮ ПРОДОЛЖЕНИЯ
+  const resumePosition = await this.findResumePosition(targetCategories);
+  
+  // Если нужно перезаписать последний товар
+  if (resumePosition.shouldOverwriteLast) {
+    await this.removeLastProduct();
   }
 
+  console.log(`🎯 Начинаем парсинг с категории: ${targetCategories[resumePosition.categoryIndex].type}`);
+
+  // Время начала парсинга
+  const startTime = Date.now();
+  let lastPauseTime = startTime;
+
+  // ПАРСИМ ТОЛЬКО ОСТАВШИЕСЯ КАТЕГОРИИ
+  for (let i = resumePosition.categoryIndex; i < targetCategories.length; i++) {
+    const category = targetCategories[i];
+    console.log(`\n📂 Парсим категорию ${i + 1}/${targetCategories.length}: ${category.type}`);
+    console.log(`🔗 URL: ${category.url}`);
+
+    try {
+      // Передаем lastProductUrl только для первой категории продолжения
+      const lastProductUrl = (i === resumePosition.categoryIndex) ? resumePosition.lastProductUrl : null;
+      
+      const categoryProducts = await this.parseCategory(category.url, category.type, lastProductUrl);
+
+      if (categoryProducts.length > 0) {
+        // Товары уже сохранены по страницам, просто логируем итог
+        console.log(`💾 Категория ${category.type} полностью сохранена`);
+        
+        this.allProducts.push(...categoryProducts);
+      } else {
+        console.log(`⏭️ Категория ${category.type} не дала новых товаров`);
+      }
+
+      // Паузы каждые 20 минут
+      const currentTime = Date.now();
+      const timeSinceLastPause = currentTime - lastPauseTime;
+      const twentyMinutes = 20 * 60 * 1000;
+
+      if (timeSinceLastPause >= twentyMinutes) {
+        const pauseMinutes = Math.floor(Math.random() * 7) + 1;
+        console.log(`⏸️ Пауза ${pauseMinutes} минут после 20+ минут работы...`);
+        await this.delay(pauseMinutes * 60 * 1000);
+        lastPauseTime = Date.now();
+      }
+
+      await this.delay(this.config.delay);
+    } catch (error) {
+      console.error(`❌ Ошибка парсинга ${category.type}:`, error.message);
+      await this.delay(2 * 60 * 1000);
+    }
+  }
+
+  // Товары уже обработаны в parseCategory
+  console.log(`📊 Итого обработанных товаров: ${this.allProducts.length}`);
+  return this.allProducts;
+}
   removeDuplicates(products) {
     const seen = new Set();
     return products.filter(product => {
@@ -226,6 +310,10 @@ class ReBikeParser {
       seen.add(product.url);
       return true;
     });
+  }
+
+  checkProductExists(productUrl, existingProducts) {
+    return existingProducts.some(product => product.url === productUrl);
   }
 
   determineCategoryType(url) {
@@ -324,48 +412,112 @@ class ReBikeParser {
     }
   }
 
-  async parseCategory(categoryUrl, categoryName = 'unknown') {
-    const page = await this.browser.newPage();
-    await page.setUserAgent(this.config.userAgent);
+async parseCategory(categoryUrl, categoryName = 'unknown', lastProductUrl = null) {
+  const page = await this.browser.newPage();
+  await page.setUserAgent(this.config.userAgent);
 
-    try {
-      console.log(`Парсим категорию: ${categoryName} (${categoryUrl})`);
-      let pageNum = 1;
-      let hasNextPage = true;
-      const categoryProducts = [];
+  try {
+    console.log(`Парсим категорию: ${categoryName} (${categoryUrl})`);
+    if (lastProductUrl) {
+      console.log(`🎯 Продолжаем с товара: ${lastProductUrl}`);
+    }
 
-      while (hasNextPage) {
-        const url = `${categoryUrl}${categoryUrl.includes('?') ? '&' : '?'}page=${pageNum}`;
-        console.log(`  Страница ${pageNum}: ${url}`);
+    let pageNum = 1;
+    let hasNextPage = true;
+    const categoryProducts = [];
 
-        await page.goto(url, { waitUntil: 'networkidle0' });
-        await this.delay(this.config.delay);
+    while (hasNextPage) {
+      const url = `${categoryUrl}${categoryUrl.includes('?') ? '&' : '?'}p=${pageNum}`;
+      console.log(`  Страница ${pageNum}: ${url}`);
 
-        const pageProducts = await this.parsePageProducts(page, categoryName);
+      await page.goto(url, { waitUntil: 'networkidle0' });
+      await this.delay(this.config.delay);
 
-        if (pageProducts.length === 0) {
-          hasNextPage = false;
-        } else {
-          categoryProducts.push(...pageProducts);
+      // ПРОВЕРЯЕМ ПАГИНАЦИЮ СНАЧАЛА
+      console.log(`  🔍 Проверяем пагинацию на странице ${pageNum}...`);
+
+      const paginationInfo = await page.evaluate(() => {
+        const nextButton = document.querySelector('button[aria-label="Go to next page"]');
+        const pagination = document.querySelector('.MuiPagination-root');
+        const currentPageButton = document.querySelector('.MuiPaginationItem-page.Mui-selected');
+
+        return {
+          nextButtonExists: !!nextButton,
+          nextButtonDisabled: nextButton ? nextButton.disabled : null,
+          nextButtonClasses: nextButton ? nextButton.className : null,
+          paginationExists: !!pagination,
+          currentPage: currentPageButton ? currentPageButton.textContent : null,
+          url: window.location.href
+        };
+      });
+
+      console.log(`    Пагинация найдена: ${paginationInfo.paginationExists}`);
+      console.log(`    Кнопка "Далее" найдена: ${paginationInfo.nextButtonExists}`);
+      console.log(`    Есть следующая страница: ${paginationInfo.nextButtonExists && !paginationInfo.nextButtonDisabled}`);
+
+      const hasNextPageBefore = paginationInfo.nextButtonExists &&
+        !paginationInfo.nextButtonDisabled &&
+        !paginationInfo.nextButtonClasses?.includes('Mui-disabled');
+
+      // ПАРСИМ ТОВАРЫ (передаем lastProductUrl только для первой страницы)
+      const pageProducts = await this.parsePageProducts(page, categoryName, pageNum === 1 ? lastProductUrl : null);
+
+      if (pageProducts.length === 0) {
+        console.log(`  ❌ На странице ${pageNum} нет новых товаров - останавливаем`);
+        hasNextPage = false;
+      } else {
+        categoryProducts.push(...pageProducts);
+        console.log(`  ✅ Страница ${pageNum}: найдено ${pageProducts.length} новых товаров`);
+        
+        // АВТОСОХРАНЕНИЕ ПОСЛЕ КАЖДОЙ СТРАНИЦЫ
+    // АВТОСОХРАНЕНИЕ ПОСЛЕ КАЖДОЙ СТРАНИЦЫ
+    if (pageProducts.length > 0) {
+      try {
+        // Устанавливаем категорию для товаров страницы
+        const pageProductsWithCategory = pageProducts.map(product => ({
+          ...product,
+          category: categoryName
+        }));
+        
+        // ОБРАБАТЫВАЕМ товары для добавления ID и цен
+        const processedPageProducts = this.processProducts(pageProductsWithCategory);
+        console.log(`  🔄 Обработано товаров страницы: ${processedPageProducts.length}`);
+        console.log(`  🆔 Первые ID страницы: ${processedPageProducts.slice(0, 2).map(p => p.id).join(', ')}`);
+        
+        // Убираем дубликаты внутри страницы  
+        const uniquePageProducts = this.removeDuplicatesInCategory(processedPageProducts);
+        
+        // Сохраняем в файл КАТЕГОРИИ
+        await this.saveIncrementalCategoryProducts(categoryName, uniquePageProducts);
+        console.log(`  💾 Страница ${pageNum} сохранена в файл категории ${categoryName} (${uniquePageProducts.length} товаров)`);
+      } catch (saveError) {
+        console.error(`  ❌ Ошибка автосохранения страницы ${pageNum}:`, saveError.message);
+      }
+    }
+        
+        hasNextPage = hasNextPageBefore;
+        console.log(`    Переходим к странице ${pageNum + 1}: ${hasNextPage}`);
+        
+        if (hasNextPage) {
           pageNum++;
-
-          hasNextPage = await page.evaluate(() => {
-            return !!document.querySelector('[aria-label="Next page"], .pagination-next, [class*="next"]');
-          });
         }
 
-        // ИЗМЕНЯЕМ: парсим 2 страницы вместо 1
-        if (pageNum > 2) break;
+        if (pageNum > 100) {
+          console.log(`  ⚠️ Достигнут лимит в 100 страниц`);
+          hasNextPage = false;
+        }
       }
-
-      console.log(`  Найдено товаров в категории ${categoryName}: ${categoryProducts.length}`);
-      return categoryProducts;
-    } finally {
-      await page.close();
     }
-  }
 
-  async parsePageProducts(page, categoryName = 'unknown') {
+    console.log(`  Найдено товаров в категории ${categoryName}: ${categoryProducts.length}`);
+    // Товары уже обработаны и сохранены по страницам
+    return categoryProducts;
+  } finally {
+    await page.close();
+  }
+}
+
+  async parsePageProducts(page, categoryName = 'unknown', lastProductUrl = null) {
     try {
       await page.waitForSelector('.bike-card', { timeout: 5000 });
     } catch {
@@ -400,12 +552,48 @@ class ReBikeParser {
       }).filter(product => product.title);
     }, categoryName);
 
-    // Для каждого товара получаем дополнительные данные
+    // Загружаем существующие товары для проверки
+    const existingProducts = await this.loadExistingProducts();
+
+    // Если указан lastProductUrl, начинаем парсинг С НЕГО (включительно)
+    let startParsing = lastProductUrl ? false : true;
+    let foundLastProduct = false;
+
     const enhancedProducts = [];
 
-    for (const product of cardData.slice(0, 2)) { // Ограничиваем для теста до 2 товаров
+    for (const product of cardData) {
       try {
-        console.log(`    📄 Получаем детали для: ${product.title}`);
+        // Если ищем точку продолжения
+        if (lastProductUrl && !startParsing) {
+          if (product.url === lastProductUrl) {
+            console.log(`    🎯 Найден последний товар: ${product.title}`);
+            startParsing = true;
+            foundLastProduct = true;
+            // НЕ пропускаем этот товар - перезаписываем его
+          } else {
+            console.log(`    ⏭️ Пропускаем товар до точки продолжения: ${product.title}`);
+            continue;
+          }
+        }
+
+        // Если еще не дошли до точки продолжения
+        if (!startParsing) {
+          continue;
+        }
+
+        // ПРОВЕРЯЕМ: есть ли товар уже в базе (только для товаров ПОСЛЕ точки продолжения)
+        if (!foundLastProduct && this.checkProductExists(product.url, existingProducts)) {
+          console.log(`    ⏭️ Товар уже существует: ${product.title}`);
+          continue;
+        }
+
+        // Сбрасываем флаг после обработки последнего товара
+        if (foundLastProduct) {
+          foundLastProduct = false;
+        }
+
+        // Парсим только НОВЫЕ товары или перезаписываемый последний
+        console.log(`    📄 Парсим товар: ${product.title}`);
 
         const productDetails = await this.getProductDetails(page, product.url);
 
@@ -414,7 +602,7 @@ class ReBikeParser {
           ...productDetails
         });
 
-        await this.delay(1000); // Задержка между запросами
+        await this.delay(1000);
       } catch (error) {
         console.log(`    ⚠️ Не удалось получить детали для ${product.title}`);
         enhancedProducts.push({
@@ -426,96 +614,200 @@ class ReBikeParser {
       }
     }
 
+    console.log(`    📊 На странице: ${cardData.length} товаров, обработано: ${enhancedProducts.length}`);
     return enhancedProducts;
   }
 
 
-
   async getProductDetails(page, productUrl) {
-    try {
-      await page.goto(productUrl, { waitUntil: 'networkidle0', timeout: 15000 });
+    let retries = 3; // Количество попыток
 
-      const details = await page.evaluate(() => {
-        // Собираем все изображения
-        const images = [];
-        const imageElements = document.querySelectorAll('img[src*="rebike-photo-nas"]');
-        imageElements.forEach(img => {
-          if (img.src && !images.includes(img.src)) {
-            images.push(img.src);
-          }
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`    📄 Попытка ${attempt}/${retries}: загружаем детали...`);
+
+        // Увеличенный тайм-аут до 30 секунд
+        await page.goto(productUrl, {
+          waitUntil: 'networkidle0',
+          timeout: 45000
         });
 
-        // Берем лучшее описание
-        let description = '';
-
-        // Сначала пробуем найти специфичное описание для товара
-        const specificDesc = document.querySelector('h1')?.textContent.trim();
-        if (specificDesc && specificDesc.length > 20) {
-          description = specificDesc;
-        } else {
-          // Если нет - берем из meta
-          const metaDesc = document.querySelector('meta[name="description"]');
-          if (metaDesc) {
-            description = metaDesc.content;
-          }
-        }
-
-        // Дополняем полезной информацией
-        const usageDesc = Array.from(document.querySelectorAll('p')).find(p =>
-          p.textContent.includes('Für den Alltag') ||
-          p.textContent.includes('eignet sich für') ||
-          p.textContent.includes('Körpergröße')
-        );
-        if (usageDesc && description) {
-          description += '. ' + usageDesc.textContent.trim();
-        }
-
-        // Парсим характеристики с проверкой наличия
-        const specs = {};
-        const specTables = document.querySelectorAll('table');
-
-        // Ищем таблицу с характеристиками (проверяем все таблицы)
-        let foundSpecTable = null;
-        for (let i = 0; i < specTables.length; i++) {
-          const tableText = specTables[i].textContent;
-          if (tableText.includes('Artikel-Nr') || tableText.includes('Motor') || tableText.includes('Akku')) {
-            foundSpecTable = specTables[i];
-            break;
-          }
-        }
-
-        if (foundSpecTable) {
-          const rows = foundSpecTable.querySelectorAll('tr');
-          rows.forEach(row => {
-            const th = row.querySelector('th');
-            const td = row.querySelector('td');
-            if (th && td) {
-              const key = th.textContent.trim();
-              const value = td.textContent.trim();
-              if (key && value && key.length < 50 && value.length < 100) {
-                specs[key] = value;
-              }
+        const details = await page.evaluate(() => {
+          // Собираем все изображения
+          const images = [];
+          const imageElements = document.querySelectorAll('img[src*="rebike-photo-nas"]');
+          imageElements.forEach(img => {
+            if (img.src && !images.includes(img.src)) {
+              images.push(img.src);
             }
           });
+
+          // Берем лучшее описание
+          let description = '';
+
+          // Сначала пробуем найти специфичное описание для товара
+          const specificDesc = document.querySelector('h1')?.textContent.trim();
+          if (specificDesc && specificDesc.length > 20) {
+            description = specificDesc;
+          } else {
+            // Если нет - берем из meta
+            const metaDesc = document.querySelector('meta[name="description"]');
+            if (metaDesc) {
+              description = metaDesc.content;
+            }
+          }
+
+          // Дополняем полезной информацией
+          const usageDesc = Array.from(document.querySelectorAll('p')).find(p =>
+            p.textContent.includes('Für den Alltag') ||
+            p.textContent.includes('eignet sich für') ||
+            p.textContent.includes('Körpergröße')
+          );
+          if (usageDesc && description) {
+            description += '. ' + usageDesc.textContent.trim();
+          }
+
+          // Парсим характеристики с проверкой наличия
+          const specs = {};
+          const specTables = document.querySelectorAll('table');
+
+          // Ищем таблицу с характеристиками (проверяем все таблицы)
+          let foundSpecTable = null;
+          for (let i = 0; i < specTables.length; i++) {
+            const tableText = specTables[i].textContent;
+            if (tableText.includes('Artikel-Nr') || tableText.includes('Motor') || tableText.includes('Akku')) {
+              foundSpecTable = specTables[i];
+              break;
+            }
+          }
+
+          if (foundSpecTable) {
+            const rows = foundSpecTable.querySelectorAll('tr');
+            rows.forEach(row => {
+              const th = row.querySelector('th');
+              const td = row.querySelector('td');
+              if (th && td) {
+                const key = th.textContent.trim();
+                const value = td.textContent.trim();
+                if (key && value && key.length < 50 && value.length < 100) {
+                  specs[key] = value;
+                }
+              }
+            });
+          }
+
+          return {
+            images: images.slice(0, 8),
+            description: description || 'Detaillierte Beschreibung wird geladen...',
+            specifications: specs
+          };
+        });
+
+        console.log(`    ✅ Детали получены успешно`);
+        return details;
+
+      } catch (error) {
+        console.log(`    ⚠️ Попытка ${attempt} неудачна: ${error.message}`);
+
+        if (attempt < retries) {
+          // Пауза между попытками: 2, 4, 6 секунд
+          const pauseSeconds = attempt * 4;
+          console.log(`    ⏸️ Пауза ${pauseSeconds} секунд перед повтором...`);
+          await this.delay(pauseSeconds * 1000);
         }
+      }
+    }
 
-        return {
-          images: images.slice(0, 8),
-          description: description || 'Detaillierte Beschreibung wird geladen...',
-          specifications: specs
+    // Если все попытки неудачны - возвращаем базовые данные
+    console.log(`    ❌ Все попытки неудачны, используем базовые данные`);
+    return {
+      images: [],
+      description: 'Beschreibung wird geladen...',
+      specifications: {}
+    };
+  }
+async findResumePosition(targetCategories) {
+  try {
+    // Ищем последнюю непустую категорию
+    for (let i = targetCategories.length - 1; i >= 0; i--) {
+      const category = targetCategories[i];
+      const categoryProducts = await this.loadCategoryProducts(category.type);
+      
+      if (categoryProducts.length > 0) {
+        const lastProduct = categoryProducts[categoryProducts.length - 1];
+        console.log(`🔍 Последний товар найден в категории ${category.type}: ${lastProduct.title}`);
+        console.log(`🔄 Продолжаем с категории ${category.type}, перезапишем последний товар`);
+        
+        return { 
+          categoryIndex: i, 
+          lastProductUrl: lastProduct.url,
+          shouldOverwriteLast: true 
         };
-      });
+      }
+    }
+    
+    console.log(`🆕 Все файлы категорий пусты, начинаем с начала`);
+    return { categoryIndex: 0, lastProductUrl: null, shouldOverwriteLast: false };
+  } catch (error) {
+    console.log(`⚠️ Ошибка определения позиции: ${error.message}, начинаем сначала`);
+    return { categoryIndex: 0, lastProductUrl: null, shouldOverwriteLast: false };
+  }
+}
 
-      return details;
-    } catch (error) {
-      console.log(`    ❌ Ошибка получения деталей: ${error.message}`);
-      return {
-        images: [],
-        description: 'Beschreibung wird geladen...',
-        specifications: {}
-      };
+async removeLastProduct() {
+  try {
+    // Находим последнюю категорию с товарами
+    const targetCategories = [
+      { type: 'sales' }, { type: 'all' }, { type: 'trekking-city' }, 
+      { type: 'trekking' }, { type: 'city' }, { type: 'urban' }, 
+      { type: 'mountain' }, { type: 'hardtail' }, { type: 'fully' }, 
+      { type: 'cargo' }, { type: 'speed' }, { type: 'gravel' }, 
+      { type: 'kids' }, { type: 'classic' }
+    ];
+    
+    for (let i = targetCategories.length - 1; i >= 0; i--) {
+      const category = targetCategories[i];
+      const categoryProducts = await this.loadCategoryProducts(category.type);
+      
+      if (categoryProducts.length > 0) {
+        const removedProduct = categoryProducts.pop(); // Удаляем последний
+        await this.saveCategoryProducts(category.type, categoryProducts);
+        console.log(`🗑️ Удален последний товар из ${category.type}: ${removedProduct.title}`);
+        return categoryProducts;
+      }
+    }
+    
+    return [];
+  } catch (error) {
+    console.error(`❌ Ошибка удаления последнего товара:`, error);
+    return [];
+  }
+}
+
+async combineAllCategories() {
+  const targetCategories = [
+    'sales', 'all', 'trekking-city', 'trekking', 'city', 'urban', 
+    'mountain', 'hardtail', 'fully', 'cargo', 'speed', 'gravel', 'kids', 'classic'
+  ];
+  
+  let allProducts = [];
+  
+  for (const categoryName of targetCategories) {
+    const categoryProducts = await this.loadCategoryProducts(categoryName);
+    if (categoryProducts.length > 0) {
+      console.log(`📂 Категория ${categoryName}: ${categoryProducts.length} товаров`);
+      allProducts.push(...categoryProducts);
     }
   }
+  
+  console.log(`📊 Всего товаров: ${allProducts.length}`);
+  
+  // Сохраняем объединенный файл для совместимости
+  await this.saveProducts(allProducts);
+  
+  return allProducts;
+}
+
 
   // НАЙТИ И ЗАМЕНИТЬ ВЕСЬ МЕТОД processProducts:
   processProducts(products) {
@@ -555,7 +847,7 @@ class ReBikeParser {
         // Сохраняем оригинальные цены для применения наценки на фронте
         originalBasePriceEur: ourOriginalPrice, // ДОБАВЛЯЕМ базовую цену
         currentBasePriceEur: ourCurrentPrice,   // ДОБАВЛЯЕМ базовую цену
-        priceRub: ourCurrentPrice ? `${ourCurrentPrice} €` : product.currentPrice,
+        priceRub: ourCurrentPrice ? `${ourCurrentPrice} €` : (product.currentPrice || 'Цена не указана'),
         originalPriceRub: ourOriginalPrice ? `${ourOriginalPrice} €` : null,
         originalPriceEur: product.originalPrice,
         currentPriceEur: product.currentPrice,
@@ -573,9 +865,21 @@ class ReBikeParser {
     return processedProducts;
   }
 
-  generateId(url) {
-    return url.split('/').pop().split('?')[0];
+generateId(url) {
+  // Извлекаем number из URL - это и есть ID товара
+  const numberMatch = url.match(/number=(\d+)/);
+  if (numberMatch) {
+    return numberMatch[1]; // возвращаем число как строку
   }
+  
+  // Fallback - берем последнюю часть URL
+  const parts = url.split('/');
+  const lastPart = parts[parts.length - 1];
+  const cleanId = lastPart.split('?')[0];
+  
+  // Убираем лишние символы
+  return cleanId.replace(/[^a-zA-Z0-9-]/g, '') || 'unknown';
+}
 
   extractPrice(priceStr) {
     if (!priceStr) return null;
