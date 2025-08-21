@@ -1120,12 +1120,24 @@ body {
     border-color: #3182ce;
 }
 
-/* Показываем стрелки на мобильных */
+/* Показываем стрелки на ВСЕХ устройствах */
+.category-nav-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Адаптация под разные экраны */
+@media (min-width: 769px) {
+    .category-nav-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+}
+
 @media (max-width: 768px) {
     .category-nav-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
         width: 28px;
         height: 28px;
         font-size: 16px;

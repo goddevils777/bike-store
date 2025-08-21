@@ -176,5 +176,144 @@ router.get('/:hash/api/settings/email-config', adminAuth.checkSecretHash, adminA
         res.status(500).json({ error: 'Ошибка получения конфигурации email' });
     }
 });
+// Запуск синхронизации товаров с логами
+router.post('/:hash/api/sync-products', adminAuth.checkSecretHash, adminAuth.requireAuth, (req, res) => {
+    const { spawn } = require('child_process');
+    const path = require('path');
+    
+    res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+    });
+
+    try {
+        const syncProcess = spawn('node', [path.join(__dirname, '../../src/sync.js')], {
+            stdio: ['pipe', 'pipe', 'pipe'],
+            cwd: path.join(__dirname, '../../')
+        });
+
+        // ДОБАВИТЬ: Таймаут для процесса (30 минут)
+        const timeout = setTimeout(() => {
+            console.log('🕐 Процесс синхронизации превысил лимит времени, завершаем...');
+            syncProcess.kill('SIGTERM');
+            res.write(`data: ${JSON.stringify({ type: 'error', message: 'Превышен лимит времени синхронизации (30 мин)' })}\n\n`);
+            res.end();
+        }, 30 * 60 * 1000); // 30 минут
+
+        syncProcess.stdout.on('data', (data) => {
+            const output = data.toString();
+            res.write(`data: ${JSON.stringify({ type: 'log', message: output })}\n\n`);
+        });
+
+        syncProcess.stderr.on('data', (data) => {
+            const output = data.toString();
+            res.write(`data: ${JSON.stringify({ type: 'error', message: output })}\n\n`);
+        });
+
+        syncProcess.on('close', (code) => {
+            clearTimeout(timeout); // ДОБАВИТЬ: Очищаем таймаут
+            const message = code === 0 ? 'Синхронизация завершена успешно!' : 'Синхронизация завершилась с ошибкой';
+            res.write(`data: ${JSON.stringify({ type: 'complete', code, message })}\n\n`);
+            res.end();
+        });
+
+        syncProcess.on('error', (error) => {
+            clearTimeout(timeout); // ДОБАВИТЬ: Очищаем таймаут
+            res.write(`data: ${JSON.stringify({ type: 'error', message: `Ошибка запуска: ${error.message}` })}\n\n`);
+            res.end();
+        });
+
+    } catch (error) {
+        res.write(`data: ${JSON.stringify({ type: 'error', message: `Ошибка: ${error.message}` })}\n\n`);
+        res.end();
+    }
+});
+
+// API для получения SMTP настроек
+router.get('/:hash/api/settings/smtp', adminAuth.checkSecretHash, adminAuth.requireAuth, async (req, res) => {
+    try {
+        const smtpSettings = await Settings.getSMTPSettings();
+        // НЕ отправляем пароль на фронтенд
+        const safeSettings = {
+            ...smtpSettings,
+            password: smtpSettings.password ? '••••••••' : ''
+        };
+        res.json(safeSettings);
+    } catch (error) {
+        console.error('Ошибка загрузки SMTP настроек:', error);
+        res.status(500).json({ error: 'Ошибка загрузки настроек' });
+    }
+});
+
+// API для сохранения SMTP настроек
+router.put('/:hash/api/settings/smtp', adminAuth.checkSecretHash, adminAuth.requireAuth, async (req, res) => {
+    try {
+        const { host, port, secure, user, password, enabled } = req.body;
+        
+        // Валидация
+        if (!host || !port || !user) {
+            return res.status(400).json({ error: 'Заполните обязательные поля' });
+        }
+        
+        // Проверяем формат email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(user)) {
+            return res.status(400).json({ error: 'Неверный формат email' });
+        }
+        
+        const smtpData = {
+            host: host.trim(),
+            port: parseInt(port),
+            secure: Boolean(secure),
+            user: user.trim(),
+            password: password === '••••••••' ? (await Settings.getSMTPSettings()).password : password.trim(),
+            enabled: Boolean(enabled)
+        };
+        
+        await Settings.saveSMTPSettings(smtpData);
+        
+        res.json({ success: true, message: 'SMTP настройки сохранены' });
+    } catch (error) {
+        console.error('Ошибка сохранения SMTP настроек:', error);
+        res.status(500).json({ error: 'Ошибка сохранения настроек' });
+    }
+});
+
+// API для тестирования SMTP
+router.post('/:hash/api/settings/smtp/test', adminAuth.checkSecretHash, adminAuth.requireAuth, async (req, res) => {
+    try {
+        const smtpSettings = await Settings.getSMTPSettings();
+        
+        if (!smtpSettings.enabled) {
+            return res.status(400).json({ error: 'SMTP не настроен' });
+        }
+        
+        // Тестируем отправку письма
+        const nodemailer = require('nodemailer');
+        
+        const transporter = nodemailer.createTransporter({
+            host: smtpSettings.host,
+            port: smtpSettings.port,
+            secure: smtpSettings.secure,
+            auth: {
+                user: smtpSettings.user,
+                pass: smtpSettings.password
+            }
+        });
+        
+        await transporter.sendMail({
+            from: smtpSettings.user,
+            to: smtpSettings.user,
+            subject: 'Тест SMTP настроек - ReBike Store',
+            text: 'Если вы получили это письмо, значит SMTP настройки работают корректно!'
+        });
+        
+        res.json({ success: true, message: 'Тестовое письмо отправлено успешно!' });
+    } catch (error) {
+        console.error('Ошибка тестирования SMTP:', error);
+        res.status(500).json({ error: `Ошибка отправки: ${error.message}` });
+    }
+});
 
 module.exports = router;

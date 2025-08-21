@@ -178,11 +178,14 @@ class AdminDashboard {
                     this.navigateToOrders();
                 } else if (href === '#settings') {
                     this.navigateToSettings();
+                } else if (href === '#seo') {
+                    window.location.href = `/admin/${this.hash}/seo`;
                 } else if (href === '#dashboard') {
                     // Обновляем дашборд
                     this.loadStats();
                     this.loadRecentOrders();
                 }
+
             });
         });
 

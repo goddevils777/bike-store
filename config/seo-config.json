@@ -1,0 +1,31 @@
+{
+  "title": "Электровелосипеды - Купить E-Bike | ReBike Store",
+  "description": "Широкий выбор электровелосипедов по выгодным ценам. Городские, горные, грузовые e-bike. Гарантия качества. Быстрая доставка.",
+  "keywords": "электровелосипед, e-bike, купить электровелосипед, электрический велосипед, pedelec",
+  "siteName": "ReBike Store",
+  "author": "ReBike Store",
+  "robots": "index, follow",
+  "language": "ru",
+  "ogTitle": "Электровелосипеды - Купить E-Bike | ReBike Store",
+  "ogDescription": "Широкий выбор электровелосипедов по выгодным ценам. Городские, горные, грузовые e-bike.",
+  "ogImage": "/images/og-image.jpg",
+  "ogUrl": "https://yoursite.com",
+  "twitterCard": "summary_large_image",
+  "twitterTitle": "Электровелосипеды - Купить E-Bike | ReBike Store",
+  "twitterDescription": "Широкий выбор электровелосипедов по выгодным ценам.",
+  "twitterImage": "/images/twitter-image.jpg",
+  "schema": {
+    "organizationName": "ReBike Store",
+    "organizationUrl": "https://yoursite.com",
+    "organizationLogo": "/images/logo.png",
+    "contactPhone": "+7 (999) 123-45-67",
+    "contactEmail": "info@rebikestore.com",
+    "address": {
+      "streetAddress": "ул. Примерная, 123",
+      "city": "Москва",
+      "region": "Московская область",
+      "postalCode": "123456",
+      "country": "Россия"
+    }
+  }
+}

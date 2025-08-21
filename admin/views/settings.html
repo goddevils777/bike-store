@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Настройки - ReBike Admin</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚴</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚴</text></svg>">
     <link rel="stylesheet" href="/admin/css/admin.css">
 </head>
+
 <body>
     <div class="admin-layout">
         <!-- Боковое меню -->
@@ -15,27 +18,22 @@
                 <div class="logo">🚴</div>
                 <h2>ReBike Admin</h2>
             </div>
-            
+
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="#dashboard" class="nav-link">
-                        📊 Дашборд
-                    </a>
+                    <a href="#dashboard" class="nav-link">📊 Главная</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#orders" class="nav-link">
-                        📦 Заказы
-                    </a>
+                    <a href="#orders" class="nav-link">📦 Заказы</a>
                 </li>
                 <li class="nav-item active">
-                    <a href="#settings" class="nav-link">
-                        ⚙️ Настройки
-                    </a>
+                    <a href="#settings" class="nav-link">⚙️ Настройки</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#logout" class="nav-link logout">
-                        🚪 Выход
-                    </a>
+                    <a href="#seo" class="nav-link">🔍 SEO</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#logout" class="nav-link logout">🚪 Выход</a>
                 </li>
             </ul>
         </nav>
@@ -56,27 +54,26 @@
                         <h2>📞 Контактная информация</h2>
                         <p>Эти данные отображаются в шапке сайта</p>
                     </div>
-                    
+
                     <form class="settings-form" id="contactsForm">
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="contactEmail">Email для контактов</label>
-                                <input type="email" id="contactEmail" name="email" required 
-                                       placeholder="info@rebike-store.ru">
+                                <input type="email" id="contactEmail" name="email" required
+                                    placeholder="info@rebike-store.ru">
                             </div>
                             <div class="form-group">
                                 <label for="contactPhone">Телефон</label>
-                                <input type="text" id="contactPhone" name="phone" required 
-                                       placeholder="+7 (999) 123-45-67">
+                                <input type="text" id="contactPhone" name="phone" required
+                                    placeholder="+7 (999) 123-45-67">
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="contactHours">Часы работы</label>
-                            <input type="text" id="contactHours" name="hours" required 
-                                   placeholder="Пн-Пт 9:00-18:00">
+                            <input type="text" id="contactHours" name="hours" required placeholder="Пн-Пт 9:00-18:00">
                         </div>
-                        
+
                         <button type="submit" class="btn-save">💾 Сохранить контакты</button>
                     </form>
                 </div>
@@ -87,14 +84,13 @@
                         <h2>💰 Настройки цен</h2>
                         <p>Наценка добавляется к ценам товаров с сайта-источника</p>
                     </div>
-                    
+
                     <form class="settings-form" id="pricingForm">
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="markupPercent">Наценка (%)</label>
-                                <input type="number" id="markupPercent" name="markup" 
-                                       min="0" max="1000" step="0.1" required 
-                                       placeholder="10">
+                                <input type="number" id="markupPercent" name="markup" min="0" max="1000" step="0.1"
+                                    required placeholder="10">
                                 <small class="form-hint">
                                     Например: 10% означает что к цене 1000€ добавится 100€
                                 </small>
@@ -108,30 +104,92 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <button type="submit" class="btn-save">💾 Сохранить наценку</button>
                     </form>
                 </div>
 
-                <!-- Email уведомления -->
-                <div class="settings-section">
-                    <div class="section-header">
-                        <h2>📧 Email уведомления</h2>
-                        <p>На этот email будут приходить уведомления о новых заказах</p>
-                    </div>
-                    
-                    <form class="settings-form" id="emailForm">
-                        <div class="form-group">
-                            <label for="notificationEmail">Email для заказов</label>
-                            <input type="email" id="notificationEmail" name="email" required 
-                                   placeholder="orders@rebike-store.ru">
-                            <small class="form-hint">
-                                Убедитесь что у вас настроен SMTP в конфигурации
-                            </small>
+                <!-- Email настройки -->
+                <div class="control-group">
+                    <h4>📧 Настройки электронной почты</h4>
+                    <p>Настройте SMTP для отправки уведомлений о заказах</p>
+
+                    <!-- SMTP настройки -->
+                    <form id="smtpForm" class="settings-form">
+                        <div class="form-section">
+                            <h5>🔧 SMTP сервер</h5>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="smtpHost">SMTP хост</label>
+                                    <input type="text" id="smtpHost" name="host" placeholder="smtp.gmail.com" required>
+                                    <small>Для Gmail: smtp.gmail.com</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="smtpPort">Порт</label>
+                                    <input type="number" id="smtpPort" name="port" value="587" required>
+                                    <small>587 для TLS, 465 для SSL</small>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="smtpSecure" name="secure">
+                                    <label for="smtpSecure">Использовать SSL (порт 465)</label>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="smtpUser">Email</label>
+                                    <input type="email" id="smtpUser" name="user" placeholder="your-email@gmail.com"
+                                        required>
+                                    <small>Email от которого будут отправляться письма</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="smtpPassword">App Password</label>
+                                    <input type="password" id="smtpPassword" name="password"
+                                        placeholder="Введите App Password">
+                                    <small><a href="https://myaccount.google.com/apppasswords" target="_blank">Получить
+                                            App Password</a></small>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="smtpEnabled" name="enabled">
+                                    <label for="smtpEnabled">Включить отправку email</label>
+                                </div>
+                            </div>
+
+                            <div class="button-group">
+                                <button type="submit" class="btn-save">💾 Сохранить SMTP настройки</button>
+                                <button type="button" id="testSmtpBtn" class="btn-test">📧 Отправить тест</button>
+                            </div>
                         </div>
-                        
-                        <button type="submit" class="btn-save">💾 Сохранить email</button>
                     </form>
+
+                    <!-- Настройка email для уведомлений -->
+                    <form id="emailForm" class="settings-form">
+                        <div class="form-section">
+                            <h5>📬 Получатель уведомлений</h5>
+                            <div class="form-group">
+                                <label for="notificationEmail">Email для получения заказов</label>
+                                <input type="email" id="notificationEmail" name="email"
+                                    placeholder="orders@yourdomain.com" required>
+                                <small>На этот email будут приходить уведомления о новых заказах</small>
+                            </div>
+                            <button type="submit" class="btn-save">💾 Сохранить получателя</button>
+                        </div>
+                    </form>
+
+                    <!-- Статус SMTP -->
+                    <div class="smtp-status">
+                        <div class="status-indicator" id="smtpStatus">
+                            <span class="status-dot"></span>
+                            <span class="status-text">SMTP не настроен</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Управление каталогом -->
@@ -140,16 +198,41 @@
                         <h2>🔄 Управление каталогом</h2>
                         <p>Обновление товаров с сайта-источника</p>
                     </div>
-                    
+
                     <div class="catalog-controls">
+                        <!-- Управление каталогом -->
                         <div class="control-group">
-                            <h4>Ручное обновление</h4>
-                            <p>Запустить парсинг товаров прямо сейчас</p>
-                            <button class="btn-action" id="updateCatalogBtn">
-                                🚀 Запустить обновление каталога
+                            <h4>🔄 Синхронизация товаров</h4>
+                            <p>Запуск полной синхронизации с оригинальным сайтом. Система проверит все категории,
+                                добавит новые товары и удалит устаревшие.</p>
+
+                            <button id="updateCatalogBtn" class="btn-action">
+                                🚀 Запустить синхронизацию товаров
                             </button>
+
+                            <div class="schedule-info">
+                                <span class="schedule-item">⏰ Автоматически: каждые 6 часов</span>
+                                <span class="schedule-item">🔍 Проверка: всех 14 категорий</span>
+                                <span class="schedule-item">⚡ Время: ~2-4 часа</span>
+                            </div>
+
+                            <!-- Статус синхронизации -->
+                            <div id="updateProgress" class="update-status" style="display: none;">
+                                <div class="status-info" id="updateStatusText">Готов к синхронизации</div>
+
+                                <div class="status-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 0%;"></div>
+                                    </div>
+                                    <div style="font-size: 0.85rem; color: #718096; margin-top: 8px;">
+                                        Синхронизация может занять несколько часов в зависимости от количества товаров
+                                    </div>
+                                </div>
+
+                                <!-- Контейнер для логов будет создан динамически -->
+                            </div>
                         </div>
-                        
+
                         <div class="control-group">
                             <h4>Автоматическое обновление</h4>
                             <p>Каталог обновляется автоматически каждые 6 часов и в 2:00 ночи</p>
@@ -185,6 +268,11 @@
         </div>
     </div>
 
+    <script>
+        // Делаем adminHash доступным глобально
+        window.adminHash = window.location.pathname.split('/')[2];
+    </script>
     <script src="/admin/js/settings.js"></script>
 </body>
+
 </html>

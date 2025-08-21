@@ -146,6 +146,46 @@ static setMarkupPercent(percent) {
             }
         });
     }
+
+    // Добавь новый метод для SMTP настроек
+// Заменить getSMTPSettings на:
+static async getSMTPSettings() {
+    try {
+        const settings = {
+            host: await this.get('smtp_host') || 'smtp.gmail.com',
+            port: parseInt(await this.get('smtp_port')) || 587,
+            secure: (await this.get('smtp_secure')) === 'true',
+            user: await this.get('smtp_user') || '',
+            password: await this.get('smtp_password') || '',
+            enabled: (await this.get('smtp_enabled')) === 'true'
+        };
+        return settings;
+    } catch (error) {
+        return {
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+            user: '',
+            password: '',
+            enabled: false
+        };
+    }
+}
+
+// Заменить saveSMTPSettings на:
+static async saveSMTPSettings(smtpData) {
+    return this.updateMultiple({
+        smtp_host: smtpData.host,
+        smtp_port: smtpData.port.toString(),
+        smtp_secure: smtpData.secure.toString(),
+        smtp_user: smtpData.user,
+        smtp_password: smtpData.password,
+        smtp_enabled: smtpData.enabled.toString()
+    });
+}
+
+
+
 }
 
 module.exports = Settings;

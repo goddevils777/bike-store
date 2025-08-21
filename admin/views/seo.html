@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Настройки - Админ панель</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚴</text></svg>">
+    <link rel="stylesheet" href="/admin/css/admin.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Боковое меню -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🚴‍♂️</div>
+                <h2>ReBike Admin</h2>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#dashboard" class="nav-link">📊 Главная</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#orders" class="nav-link">📦 Заказы</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#settings" class="nav-link">⚙️ Настройки</a>
+                </li>
+                <li class="nav-item active">
+                    <a href="#seo" class="nav-link">🔍 SEO</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#logout" class="nav-link logout">🚪 Выход</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>🔍 SEO Оптимизация</h1>
+                <div class="user-info">
+                    Админ панель
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- Основные SEO теги -->
+                <div class="seo-section">
+                    <h3>📄 Основные META теги</h3>
+                    <form id="basicSeoForm" class="seo-form">
+                        <div class="form-group">
+                            <label for="title">Title (заголовок страницы)</label>
+                            <input type="text" id="title" name="title" maxlength="60" required>
+                            <small>Рекомендуемая длина: 50-60 символов</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Meta Description (описание)</label>
+                            <textarea id="description" name="description" maxlength="160" rows="3" required></textarea>
+                            <small>Рекомендуемая длина: 150-160 символов</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="keywords">Keywords (ключевые слова)</label>
+                            <input type="text" id="keywords" name="keywords">
+                            <small>Через запятую: электровелосипед, e-bike, pedelec</small>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="siteName">Название сайта</label>
+                                <input type="text" id="siteName" name="siteName">
+                            </div>
+                            <div class="form-group">
+                                <label for="author">Автор</label>
+                                <input type="text" id="author" name="author">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="robots">Robots</label>
+                                <select id="robots" name="robots">
+                                    <option value="index, follow">index, follow</option>
+                                    <option value="noindex, nofollow">noindex, nofollow</option>
+                                    <option value="index, nofollow">index, nofollow</option>
+                                    <option value="noindex, follow">noindex, follow</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="language">Язык</label>
+                                <select id="language" name="language">
+                                    <option value="ru">Русский</option>
+                                    <option value="en">English</option>
+                                    <option value="de">Deutsch</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-save">💾 Сохранить основные настройки</button>
+                    </form>
+                </div>
+
+                <!-- Open Graph -->
+                <div class="seo-section">
+                    <h3>📱 Open Graph (социальные сети)</h3>
+                    <form id="ogForm" class="seo-form">
+                        <div class="form-group">
+                            <label for="ogTitle">OG Title</label>
+                            <input type="text" id="ogTitle" name="ogTitle" maxlength="60">
+                            <small>Заголовок для Facebook, VK и других соцсетей</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ogDescription">OG Description</label>
+                            <textarea id="ogDescription" name="ogDescription" maxlength="160" rows="3"></textarea>
+                            <small>Описание для превью в соцсетях</small>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ogImage">OG Image (ссылка на картинку)</label>
+                                <input type="url" id="ogImage" name="ogImage">
+                                <small>Рекомендуемый размер: 1200x630px</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="ogUrl">OG URL (основной URL сайта)</label>
+                                <input type="url" id="ogUrl" name="ogUrl">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-save">💾 Сохранить Open Graph</button>
+                    </form>
+                </div>
+
+                <!-- Twitter Cards -->
+                <div class="seo-section">
+                    <h3>🐦 Twitter Cards</h3>
+                    <form id="twitterForm" class="seo-form">
+                        <div class="form-group">
+                            <label for="twitterCard">Тип карточки</label>
+                            <select id="twitterCard" name="twitterCard">
+                                <option value="summary">Summary</option>
+                                <option value="summary_large_image">Summary Large Image</option>
+                                <option value="app">App</option>
+                                <option value="player">Player</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="twitterTitle">Twitter Title</label>
+                            <input type="text" id="twitterTitle" name="twitterTitle" maxlength="70">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="twitterDescription">Twitter Description</label>
+                            <textarea id="twitterDescription" name="twitterDescription" maxlength="200" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="twitterImage">Twitter Image</label>
+                            <input type="url" id="twitterImage" name="twitterImage">
+                            <small>Рекомендуемый размер: 1024x512px</small>
+                        </div>
+
+                        <button type="submit" class="btn-save">💾 Сохранить Twitter настройки</button>
+                    </form>
+                </div>
+
+                <!-- Schema.org -->
+                <div class="seo-section">
+                    <h3>🏢 Schema.org (структурированные данные)</h3>
+                    <form id="schemaForm" class="seo-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="organizationName">Название организации</label>
+                                <input type="text" id="organizationName" name="organizationName">
+                            </div>
+                            <div class="form-group">
+                                <label for="organizationUrl">URL организации</label>
+                                <input type="url" id="organizationUrl" name="organizationUrl">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="organizationLogo">Логотип (URL)</label>
+                            <input type="url" id="organizationLogo" name="organizationLogo">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="contactPhone">Телефон</label>
+                                <input type="tel" id="contactPhone" name="contactPhone">
+                            </div>
+                            <div class="form-group">
+                                <label for="contactEmail">Email</label>
+                                <input type="email" id="contactEmail" name="contactEmail">
+                            </div>
+                        </div>
+
+                        <h4>📍 Адрес</h4>
+                        <div class="form-group">
+                            <label for="streetAddress">Улица и дом</label>
+                            <input type="text" id="streetAddress" name="streetAddress">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="city">Город</label>
+                                <input type="text" id="city" name="city">
+                            </div>
+                            <div class="form-group">
+                                <label for="region">Регион/Область</label>
+                                <input type="text" id="region" name="region">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="postalCode">Почтовый индекс</label>
+                                <input type="text" id="postalCode" name="postalCode">
+                            </div>
+                            <div class="form-group">
+                                <label for="country">Страна</label>
+                                <input type="text" id="country" name="country">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-save">💾 Сохранить Schema данные</button>
+                    </form>
+                </div>
+
+                <!-- Превью -->
+                <div class="seo-section">
+                    <h3>👁️ Превью в поисковой выдаче</h3>
+                    <div id="seoPreview" class="seo-preview">
+                        <div class="preview-url">https://yoursite.com</div>
+                        <div class="preview-title">Заголовок страницы</div>
+                        <div class="preview-description">Описание страницы для поисковых систем...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="notification" class="notification">
+        <span class="notification-text"></span>
+        <button class="notification-close">×</button>
+    </div>
+
+    <script src="/admin/js/seo.js"></script>
+</body>
+</html>

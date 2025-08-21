@@ -1,13 +1,41 @@
 <!DOCTYPE html>
 <html lang="ru">
+
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Велосипеды ReBike - Каталог</title>
+
+    <!-- Динамические SEO теги -->
+    <title id="page-title">Электровелосипеды - Купить E-Bike | ReBike Store</title>
+    <meta name="description" content="" id="meta-description">
+    <meta name="keywords" content="" id="meta-keywords">
+    <meta name="author" content="" id="meta-author">
+    <meta name="robots" content="index, follow" id="meta-robots">
+    <meta name="language" content="ru" id="meta-language">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="" id="og-site-name">
+    <meta property="og:title" content="" id="og-title">
+    <meta property="og:description" content="" id="og-description">
+    <meta property="og:image" content="" id="og-image">
+    <meta property="og:url" content="" id="og-url">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" id="twitter-card">
+    <meta name="twitter:title" content="" id="twitter-title">
+    <meta name="twitter:description" content="" id="twitter-description">
+    <meta name="twitter:image" content="" id="twitter-image">
+
+    <!-- Существующие стили и скрипты -->
     <link rel="stylesheet" href="css/styles.css">
 
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚴</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚴</text></svg>">
+
 </head>
+
 <body>
     <!-- Контейнер для шапки -->
     <div id="headerContainer"></div>
@@ -15,103 +43,103 @@
     <main class="main">
         <div class="container">
             <div class="loading" id="loading">Загрузка товаров...</div>
-            
+
             <div class="main-layout" id="mainLayout" style="display: none;">
                 <!-- Боковые фильтры -->
                 <!-- Боковые фильтры -->
-<aside class="filters-sidebar" id="filtersSidebar">
-    <button class="filters-toggle" id="filtersToggle">
-        Показать фильтры
-    </button>
-    
-    <div class="filters-content" id="filtersContent">
-        <h3 class="filters-title">Фильтры</h3>
-        
-        <div class="filter-group">
-            <h4>Цена</h4>
-            <div class="price-range">
-                <input type="number" class="price-input" id="priceMin" placeholder="От">
-                <span>-</span>
-                <input type="number" class="price-input" id="priceMax" placeholder="До">
-            </div>
-        </div>
-        
-        <div class="filter-group">
-            <h4>Состояние</h4>
-            <div class="filter-item">
-                <input type="checkbox" id="conditionNew" value="new">
-                <label for="conditionNew">Новые</label>
-            </div>
-            <div class="filter-item">
-                <input type="checkbox" id="conditionRefurb" value="refurbished">
-                <label for="conditionRefurb">Восстановленные</label>
-            </div>
-            <div class="filter-item">
-                <input type="checkbox" id="conditionUsed" value="used">
-                <label for="conditionUsed">Б/У</label>
-            </div>
-        </div>
-        <div class="filter-group">
-    <h4>Тип велосипеда</h4>
-    <div class="filter-item">
-        <input type="checkbox" id="typeCity" value="city">
-        <label for="typeCity">Городские</label>
-    </div>
-    <div class="filter-item">
-        <input type="checkbox" id="typeMountain" value="mountain">
-        <label for="typeMountain">Горные</label>
-    </div>
-    <div class="filter-item">
-        <input type="checkbox" id="typeElectric" value="electric">
-        <label for="typeElectric">Электровелосипеды</label>
-    </div>
-    <div class="filter-item">
-        <input type="checkbox" id="typeRoad" value="road">
-        <label for="typeRoad">Шоссейные</label>
-    </div>
-    <div class="filter-item">
-        <input type="checkbox" id="typeFolding" value="folding">
-        <label for="typeFolding">Складные</label>
-    </div>
-    <div class="filter-item">
-        <input type="checkbox" id="typeTrekking" value="trekking">
-        <label for="typeTrekking">Треккинговые</label>
-    </div>
-</div>
+                <aside class="filters-sidebar" id="filtersSidebar">
+                    <button class="filters-toggle" id="filtersToggle">
+                        Показать фильтры
+                    </button>
 
-<div class="filter-group">
-    <h4>Бренд</h4>
-    <div class="filter-item">
-        <input type="checkbox" id="brandPegasus" value="pegasus">
-        <label for="brandPegasus">Pegasus</label>
-    </div>
-    <div class="filter-item">
-        <input type="checkbox" id="brandWestland" value="westland">
-        <label for="brandWestland">Westland</label>
-    </div>
-    <div class="filter-item">
-        <input type="checkbox" id="brandTriumph" value="triumph">
-        <label for="brandTriumph">Triumph</label>
-    </div>
-    <div class="filter-item">
-        <input type="checkbox" id="brandCube" value="cube">
-        <label for="brandCube">Cube</label>
-    </div>
-    <div class="filter-item">
-        <input type="checkbox" id="brandTrek" value="trek">
-        <label for="brandTrek">Trek</label>
-    </div>
-    <div class="filter-item">
-        <input type="checkbox" id="brandGiant" value="giant">
-        <label for="brandGiant">Giant</label>
-    </div>
-</div>
-        
-        <button class="clear-filters" onclick="clearAllFilters()">
-            Очистить фильтры
-        </button>
-    </div>
-</aside>
+                    <div class="filters-content" id="filtersContent">
+                        <h3 class="filters-title">Фильтры</h3>
+
+                        <div class="filter-group">
+                            <h4>Цена</h4>
+                            <div class="price-range">
+                                <input type="number" class="price-input" id="priceMin" placeholder="От">
+                                <span>-</span>
+                                <input type="number" class="price-input" id="priceMax" placeholder="До">
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <h4>Состояние</h4>
+                            <div class="filter-item">
+                                <input type="checkbox" id="conditionNew" value="new">
+                                <label for="conditionNew">Новые</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="conditionRefurb" value="refurbished">
+                                <label for="conditionRefurb">Восстановленные</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="conditionUsed" value="used">
+                                <label for="conditionUsed">Б/У</label>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <h4>Тип велосипеда</h4>
+                            <div class="filter-item">
+                                <input type="checkbox" id="typeCity" value="city">
+                                <label for="typeCity">Городские</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="typeMountain" value="mountain">
+                                <label for="typeMountain">Горные</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="typeElectric" value="electric">
+                                <label for="typeElectric">Электровелосипеды</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="typeRoad" value="road">
+                                <label for="typeRoad">Шоссейные</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="typeFolding" value="folding">
+                                <label for="typeFolding">Складные</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="typeTrekking" value="trekking">
+                                <label for="typeTrekking">Треккинговые</label>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <h4>Бренд</h4>
+                            <div class="filter-item">
+                                <input type="checkbox" id="brandPegasus" value="pegasus">
+                                <label for="brandPegasus">Pegasus</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="brandWestland" value="westland">
+                                <label for="brandWestland">Westland</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="brandTriumph" value="triumph">
+                                <label for="brandTriumph">Triumph</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="brandCube" value="cube">
+                                <label for="brandCube">Cube</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="brandTrek" value="trek">
+                                <label for="brandTrek">Trek</label>
+                            </div>
+                            <div class="filter-item">
+                                <input type="checkbox" id="brandGiant" value="giant">
+                                <label for="brandGiant">Giant</label>
+                            </div>
+                        </div>
+
+                        <button class="clear-filters" onclick="clearAllFilters()">
+                            Очистить фильтры
+                        </button>
+                    </div>
+                </aside>
 
                 <!-- Основной контент -->
                 <div class="catalog-content">
@@ -122,21 +150,21 @@
                                 <span id="totalProducts">0</span> товаров найдено
                             </div>
                         </div>
-                        
-                    <div class="sort-controls">
-                        <select class="sort-select" id="sortSelect" onchange="sortProducts()">
-                            <option value="price-asc">Niedrigster Preis</option>
-                            <option value="price-desc">Höchster Preis</option>
-                            <option value="name-asc">A - Z</option>
-                            <option value="name-desc">Z - A</option>
-                        </select>
+
+                        <div class="sort-controls">
+                            <select class="sort-select" id="sortSelect" onchange="sortProducts()">
+                                <option value="price-asc">Niedrigster Preis</option>
+                                <option value="price-desc">Höchster Preis</option>
+                                <option value="name-asc">A - Z</option>
+                                <option value="name-desc">Z - A</option>
+                            </select>
+                        </div>
                     </div>
-                    </div>
-                    
+
                     <div class="products-grid" id="productsGrid">
                         <!-- Товары будут загружены через JS -->
                     </div>
-                    
+
                     <div class="pagination" id="pagination">
                         <!-- Пагинация будет создана через JS -->
                     </div>
@@ -150,40 +178,41 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
             <h3>Оформить заказ</h3>
-            
+
             <div class="product-info" id="modalProductInfo">
                 <!-- Информация о товаре -->
             </div>
-            
-        <form id="orderForm">
-            <div class="form-group">
-                <label for="customerName">Ваше имя *</label>
-                <input type="text" id="customerName" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="customerEmail">Email *</label>
-                <input type="email" id="customerEmail" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="customerPhone">Телефон</label>
-                <input type="tel" id="customerPhone">
-            </div>
-            
-            <!-- ДОБАВИТЬ ЭТО ПОЛЕ -->
-            <div class="form-group">
-                <label for="customerAddress">Адрес доставки</label>
-                <textarea id="customerAddress" rows="2" placeholder="Укажите адрес для доставки"></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="customerComment">Комментарий к заказу</label>
-                <textarea id="customerComment" rows="3" placeholder="Укажите предпочтения по доставке, вопросы и т.д."></textarea>
-            </div>
-            
-            <button type="submit" class="btn-primary">Отправить заказ</button>
-        </form>
+
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="customerName">Ваше имя *</label>
+                    <input type="text" id="customerName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="customerEmail">Email *</label>
+                    <input type="email" id="customerEmail" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="customerPhone">Телефон</label>
+                    <input type="tel" id="customerPhone">
+                </div>
+
+                <!-- ДОБАВИТЬ ЭТО ПОЛЕ -->
+                <div class="form-group">
+                    <label for="customerAddress">Адрес доставки</label>
+                    <textarea id="customerAddress" rows="2" placeholder="Укажите адрес для доставки"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="customerComment">Комментарий к заказу</label>
+                    <textarea id="customerComment" rows="3"
+                        placeholder="Укажите предпочтения по доставке, вопросы и т.д."></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary">Отправить заказ</button>
+            </form>
         </div>
     </div>
 
@@ -191,7 +220,11 @@
     <div id="footerContainer"></div>
 
     <!-- Подключаем скрипты -->
+    <script src="js/notifications.js"></script>
+    <script src="js/seo.js"></script>
     <script src="js/components.js"></script>
     <script src="js/app.js"></script>
+
 </body>
+
 </html>

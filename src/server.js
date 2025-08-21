@@ -15,6 +15,7 @@ const adminAuthRoutes = require('../admin/routes/auth');
 const adminOrdersRoutes = require('../admin/routes/orders');
 const adminSettingsRoutes = require('../admin/routes/settings');
 
+
 const app = express();
 
 // Безопасность
@@ -57,6 +58,10 @@ app.use('/admin/js', express.static(path.join(__dirname, '../admin/views/js')));
 app.use('/admin', adminAuthRoutes);
 app.use('/admin', adminOrdersRoutes);
 app.use('/admin', adminSettingsRoutes);
+
+// Подключение маршрутов админки
+const adminSeoRoutes = require('../admin/routes/seo');
+app.use('/admin', adminSeoRoutes);  // ДОБАВИТЬ ЭТУ СТРОКУ
 
 class ShopServer {
   constructor() {
@@ -117,6 +122,33 @@ class ShopServer {
     return allProducts;
   }
 
+
+  async loadSeoConfig() {
+    const path = require('path');
+    const fs = require('fs').promises;
+
+    try {
+      const seoConfigPath = path.join(__dirname, '../config/seo-config.json');
+      const data = await fs.readFile(seoConfigPath, 'utf8');
+      return JSON.parse(data);
+    } catch (error) {
+      // Возвращаем дефолтные SEO настройки если файл не найден
+      return {
+        title: "Электровелосипеды - Купить E-Bike | ReBike Store",
+        description: "Широкий выбор электровелосипедов по выгодным ценам. Городские, горные, грузовые e-bike.",
+        keywords: "электровелосипед, e-bike, купить электровелосипед",
+        siteName: "ReBike Store",
+        author: "ReBike Store",
+        robots: "index, follow",
+        language: "ru",
+        ogTitle: "Электровелосипеды - Купить E-Bike | ReBike Store",
+        ogDescription: "Широкий выбор электровелосипедов по выгодным ценам.",
+        ogImage: "/images/og-image.jpg",
+        ogUrl: "https://yoursite.com"
+      };
+    }
+  }
+
   setupRoutes() {
 
     // API для получения одного товара
@@ -126,8 +158,8 @@ class ShopServer {
 
     app.get('/api/products', async (req, res) => {
       try {
-        const { category, page = 1, limit = 24, search = '' } = req.query;
-        console.log(`🔍 API запрос: категория="${category}", страница=${page}, лимит=${limit}`);
+        const { category, page = 1, limit = 24, search = '', sort = 'default' } = req.query;
+        console.log(`🔍 API запрос: категория="${category}", страница=${page}, лимит=${limit}, сортировка="${sort}"`);
 
         let allProducts;
 
@@ -146,6 +178,35 @@ class ShopServer {
             product.title.toLowerCase().includes(search.toLowerCase())
           );
           console.log(`🔍 После поиска "${search}": ${filteredProducts.length} из ${allProducts.length} товаров`);
+        }
+
+        // ПРИМЕНЯЕМ СОРТИРОВКУ ПЕРЕД ПАГИНАЦИЕЙ
+        if (sort && sort !== 'default') {
+          console.log(`📊 Применяем сортировку: ${sort}`);
+
+          switch (sort) {
+            case 'price-asc':
+              filteredProducts.sort((a, b) => {
+                const priceA = a.currentBasePriceEur || this.extractPrice(a.priceRub) || 0;
+                const priceB = b.currentBasePriceEur || this.extractPrice(b.priceRub) || 0;
+                return priceA - priceB;
+              });
+              break;
+            case 'price-desc':
+              filteredProducts.sort((a, b) => {
+                const priceA = a.currentBasePriceEur || this.extractPrice(a.priceRub) || 0;
+                const priceB = b.currentBasePriceEur || this.extractPrice(b.priceRub) || 0;
+                return priceB - priceA;
+              });
+              break;
+            case 'name-asc':
+              filteredProducts.sort((a, b) => a.title.localeCompare(b.title));
+              break;
+            case 'name-desc':
+              filteredProducts.sort((a, b) => b.title.localeCompare(a.title));
+              break;
+          }
+          console.log(`✅ Сортировка ${sort} применена к ${filteredProducts.length} товарам`);
         }
 
         // СЕРВЕРНАЯ ПАГИНАЦИЯ - берем только нужную страницу
@@ -278,10 +339,10 @@ class ShopServer {
         }
 
         // Находим товар
-if (!this.allProductsCache) {
-  this.allProductsCache = await this.loadAllProducts();
-}
-const product = this.allProductsCache.find(p => p.id === productId);
+        if (!this.allProductsCache) {
+          this.allProductsCache = await this.loadAllProducts();
+        }
+        const product = this.allProductsCache.find(p => p.id === productId);
 
         if (!product) {
           return res.status(404).json({ error: 'Товар не найден' });
@@ -353,67 +414,158 @@ const product = this.allProductsCache.find(p => p.id === productId);
         res.status(500).json({ error: 'Ошибка запуска обновления каталога' });
       }
     });
+
+
+    // API для получения SEO данных
+    app.get('/api/seo', async (req, res) => {
+      try {
+        const seoConfig = await this.loadSeoConfig();
+        res.json(seoConfig);
+      } catch (error) {
+        console.error('Ошибка загрузки SEO конфига:', error);
+        res.status(500).json({ error: 'Ошибка загрузки SEO данных' });
+      }
+    });
+
   }
 
-
+  extractPrice(priceStr) {
+    if (!priceStr) return null;
+    const match = priceStr.match(/(\d+[\d\s,\.]*)/);
+    return match ? parseFloat(match[1].replace(/[\s,]/g, '')) : null;
+  }
 
   async sendOrderEmail(product, customerData, orderId) {
     try {
-      // Получаем email для уведомлений из настроек БД
-      let notificationEmail;
-      try {
-        notificationEmail = await Settings.getNotificationEmail();
-      } catch (error) {
-        console.log('Используем email из конфига, БД недоступна');
-        notificationEmail = config.email.to;
-      }
+      // Загружаем SMTP настройки из админки
+      const smtpSettings = await this.loadSMTPSettings();
 
-      if (!config.email.user || config.email.user === 'your-email@gmail.com') {
-        console.log('Email не настроен, заказ не отправлен');
+      if (!smtpSettings || !smtpSettings.enabled) {
+        console.log('📧 SMTP не настроен или отключен, письмо не отправлено');
         return;
       }
 
+      // Загружаем email получателя из админки
+      const emailSettings = await this.loadEmailSettings();
+      const recipientEmail = emailSettings?.email || smtpSettings.user;
+
+      console.log(`📧 Отправляем заказ на email: ${recipientEmail}`);
+
+      const nodemailer = require('nodemailer');
+
+      // Создаем транспорт с настройками из админки
       const transporter = nodemailer.createTransporter({
-        host: config.email.host,
-        port: config.email.port,
-        secure: config.email.secure,
+        host: smtpSettings.host,
+        port: smtpSettings.port,
+        secure: smtpSettings.secure,
         auth: {
-          user: config.email.user,
-          pass: config.email.password
+          user: smtpSettings.user,
+          pass: smtpSettings.password
         }
       });
 
+      // Формируем красивое HTML письмо
+      const emailHTML = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+                    <h1 style="margin: 0; font-size: 28px;">🚴‍♂️ Новый заказ!</h1>
+                    <p style="margin: 10px 0 0 0; font-size: 16px;">ReBike Store</p>
+                </div>
+                
+                <div style="background: white; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
+                    <h2 style="color: #2d3748; margin-bottom: 20px;">Заказ #${orderId}</h2>
+                    
+                    <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                        <h3 style="color: #2d3748; margin-top: 0;">🚲 Товар:</h3>
+                        <p style="font-size: 18px; font-weight: 600; color: #2d3748; margin: 10px 0;">${product.title}</p>
+                        <p style="font-size: 24px; font-weight: 700; color: #38a169; margin: 10px 0;">${product.priceRub}</p>
+                        ${product.originalPriceRub ? `<p style="color: #a0aec0; text-decoration: line-through;">Цена в оригинале: ${product.originalPriceRub}</p>` : ''}
+                        <p style="color: #4a5568; margin: 15px 0 0 0;">
+                            <a href="${product.url}" style="color: #4299e1; text-decoration: none;">🔗 Ссылка на оригинал</a>
+                        </p>
+                    </div>
+
+                    <div style="background: #f0fff4; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                        <h3 style="color: #22543d; margin-top: 0;">👤 Данные покупателя:</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr><td style="padding: 8px 0; color: #4a5568; font-weight: 600;">Имя:</td><td style="padding: 8px 0;">${customerData.name}</td></tr>
+                            <tr><td style="padding: 8px 0; color: #4a5568; font-weight: 600;">Email:</td><td style="padding: 8px 0;"><a href="mailto:${customerData.email}" style="color: #4299e1;">${customerData.email}</a></td></tr>
+                            <tr><td style="padding: 8px 0; color: #4a5568; font-weight: 600;">Телефон:</td><td style="padding: 8px 0;">${customerData.phone || 'не указан'}</td></tr>
+                            <tr><td style="padding: 8px 0; color: #4a5568; font-weight: 600;">Адрес:</td><td style="padding: 8px 0;">${customerData.address || 'не указан'}</td></tr>
+                            ${customerData.comment ? `<tr><td style="padding: 8px 0; color: #4a5568; font-weight: 600;">Комментарий:</td><td style="padding: 8px 0;">${customerData.comment}</td></tr>` : ''}
+                        </table>
+                    </div>
+
+                    <div style="background: #ebf8ff; padding: 20px; border-radius: 8px;">
+                        <p style="color: #2c5282; margin: 0; text-align: center;">
+                            ⏰ Время заказа: ${new Date().toLocaleString('ru-RU')}
+                        </p>
+                    </div>
+                </div>
+                
+                <div style="background: #f7fafc; padding: 20px; border-radius: 0 0 12px 12px; text-align: center; color: #4a5568; font-size: 14px;">
+                    Автоматическое уведомление от ReBike Store
+                </div>
+            </div>
+        `;
+
       const emailText = `
-НОВЫЙ ЗАКАЗ #${orderId}
+🚴‍♂️ НОВЫЙ ЗАКАЗ #${orderId} - ReBike Store
 
-Товар: ${product.title}
+ТОВАР:
+${product.title}
 Цена: ${product.priceRub}
-Ссылка на оригинал: ${product.url}
+${product.originalPriceRub ? `Цена в оригинале: ${product.originalPriceRub}` : ''}
+Ссылка: ${product.url}
 
-Данные покупателя:
+ПОКУПАТЕЛЬ:
 Имя: ${customerData.name}
-Email: ${customerData.email}
+Email: ${customerData.email}  
 Телефон: ${customerData.phone || 'не указан'}
-Адрес доставки: ${customerData.address || 'не указан'}
-Комментарий: ${customerData.comment || 'нет'}
+Адрес: ${customerData.address || 'не указан'}
+${customerData.comment ? `Комментарий: ${customerData.comment}` : ''}
 
 Время заказа: ${new Date().toLocaleString('ru-RU')}
 
-Заказ сохранен в системе под номером #${orderId}
-      `;
+---
+Автоматическое уведомление от ReBike Store
+        `;
 
       await transporter.sendMail({
-        from: config.email.user,
-        to: notificationEmail || config.email.to,
-        subject: `Новый заказ #${orderId}: ${product.title}`,
-        text: emailText
+        from: `"ReBike Store" <${smtpSettings.user}>`,
+        to: recipientEmail,
+        subject: `🚴‍♂️ Новый заказ #${orderId}: ${product.title}`,
+        text: emailText,
+        html: emailHTML
       });
 
-      console.log('Заказ отправлен на email:', notificationEmail || config.email.to);
+      console.log(`✅ Заказ #${orderId} отправлен на email: ${recipientEmail}`);
+
     } catch (error) {
-      console.error('Ошибка отправки email:', error);
+      console.error('❌ Ошибка отправки email:', error);
     }
   }
+
+async loadSMTPSettings() {
+    try {
+        const Settings = require('../admin/models/Settings');
+        return await Settings.getSMTPSettings();
+    } catch (error) {
+        console.error('Ошибка загрузки SMTP настроек:', error);
+        return null;
+    }
+}
+
+async loadEmailSettings() {
+    try {
+        const Settings = require('../admin/models/Settings');
+        const notificationEmail = await Settings.getNotificationEmail();
+        return { email: notificationEmail };
+    } catch (error) {
+        console.error('Ошибка загрузки email настроек:', error);
+        return null;
+    }
+}
 
   start() {
     const port = config.server.port;

@@ -721,3 +721,120 @@ html, body {
         padding-top: 12px;
     }
 }
+
+/* Основной контейнер товара */
+.product-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 40px;
+    align-items: start;
+}
+
+/* Исправления для мобильных */
+@media (max-width: 768px) {
+    .product-main {
+        grid-template-columns: 1fr; /* Одна колонка на мобильных */
+        gap: 20px;
+        margin-bottom: 20px;
+        padding: 0 16px; /* Отступы от краев экрана */
+        max-width: 100%;
+        overflow: hidden; /* Предотвращаем выход за границы */
+    }
+    
+    .product-gallery {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        order: 1; /* Галерея первая на мобильных */
+    }
+    
+    .product-info {
+        width: 100%;
+        max-width: 100%;
+        order: 2; /* Информация вторая */
+        padding: 0; /* Убираем лишние отступы */
+    }
+    
+    .main-image {
+        width: 100%;
+        max-width: 100%;
+        height: 250px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin: 0; /* Убираем отступы */
+    }
+    
+    .image-carousel {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        gap: 8px;
+        padding: 8px 0;
+        margin: 0; /* Убираем отступы */
+    }
+    
+    .thumbnail {
+        width: 60px;
+        height: 60px;
+        flex-shrink: 0;
+        min-width: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-main {
+        padding: 0 12px; /* Еще меньше отступы */
+        gap: 16px;
+    }
+    
+    .main-image {
+        height: 220px;
+        border-radius: 8px;
+    }
+    
+    .thumbnail {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        border-radius: 6px;
+    }
+    
+    .image-carousel {
+        gap: 6px;
+        padding: 6px 0;
+    }
+}
+
+/* Дополнительная защита контейнера */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 16px;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    body {
+        overflow-x: hidden; /* Предотвращаем горизонтальный скролл */
+    }
+    
+    /* Все изображения в галерее */
+    .product-gallery img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 12px;
+    }
+}

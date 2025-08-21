@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "parse": "node src/scheduler.js --once",
+    "sync": "node src/sync.js",
     "schedule": "node src/scheduler.js",
     "dev": "node src/server.js"
   },

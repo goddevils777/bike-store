@@ -271,6 +271,30 @@ class ShopApp {
         this.filterTimeout = setTimeout(() => {
             this.applyFilters();
         }, 100);
+
+        this.updateCategorySeo(category);
+    }
+
+    updateCategorySeo(category) {
+        if (!window.seoManager) return;
+
+        const categoryNames = {
+            'sales': 'Распродажа электровелосипедов',
+            'all': 'Все электровелосипеды',
+            'trekking': 'Треккинговые электровелосипеды',
+            'city': 'Городские электровелосипеды',
+            'mountain': 'Горные электровелосипеды',
+            'cargo': 'Грузовые электровелосипеды'
+        };
+
+        const categoryName = categoryNames[category] || 'Электровелосипеды';
+        const categoryTitle = `${categoryName} - Купить E-Bike | ReBike Store`;
+        const categoryDescription = `Широкий выбор ${categoryName.toLowerCase()} по выгодным ценам. Качественные электровелосипеды с гарантией.`;
+
+        window.seoManager.updateElement('page-title', categoryTitle);
+        window.seoManager.updateMetaContent('meta-description', categoryDescription);
+        window.seoManager.updateMetaContent('og-title', categoryTitle);
+        window.seoManager.updateMetaContent('og-description', categoryDescription);
     }
 
     updateCategoryUI(activeCategory) {
@@ -691,7 +715,9 @@ class ShopApp {
         const sortSelect = document.getElementById('sortSelect');
         this.currentSort = sortSelect.value;
         this.currentPage = 1;
-        this.applyFilters();
+
+        // Перезагружаем товары с новой сортировкой
+        this.loadAllProducts(1);
     }
 
     clearAllFilters() {
@@ -743,15 +769,26 @@ class ShopApp {
             this.clearOrderForm();
             document.getElementById('orderModal').style.display = 'block';
 
+            // Обновляем SEO для товара
+            if (window.seoManager && this.selectedProduct) {
+                window.seoManager.updateProductSeo(this.selectedProduct);
+            }
+
         } catch (error) {
             console.error('Ошибка загрузки товара:', error);
-            alert('Не удалось загрузить информацию о товаре');
+            window.notifications.error('Не удалось загрузить информацию о товаре');
         }
     }
 
     closeModal() {
         document.getElementById('orderModal').style.display = 'none';
         this.selectedProduct = null;
+
+        // ДОБАВИТЬ ЭТИ СТРОКИ:
+        // Восстанавливаем основные SEO теги
+        if (window.seoManager) {
+            window.seoManager.loadSeoData();
+        }
     }
 
     clearOrderForm() {
@@ -761,10 +798,9 @@ class ShopApp {
         document.getElementById('customerAddress').value = ''; // ДОБАВИТЬ ЭТО
         document.getElementById('customerComment').value = '';
     }
-
     async submitOrder() {
         if (!this.selectedProduct) {
-            alert('Товар не выбран');
+            window.notifications.error('Товар не выбран');
             return;
         }
 
@@ -772,22 +808,25 @@ class ShopApp {
             name: document.getElementById('customerName').value.trim(),
             email: document.getElementById('customerEmail').value.trim(),
             phone: document.getElementById('customerPhone').value.trim(),
-            address: document.getElementById('customerAddress').value.trim(), // ДОБАВИТЬ ЭТО
+            address: document.getElementById('customerAddress').value.trim(),
             comment: document.getElementById('customerComment').value.trim()
         };
 
         if (!customerData.name || !customerData.email) {
-            alert('Пожалуйста, заполните обязательные поля (Имя и Email)');
+            window.notifications.error('Пожалуйста, заполните обязательные поля (Имя и Email)');
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(customerData.email)) {
-            alert('Пожалуйста, введите корректный email');
+            window.notifications.error('Пожалуйста, введите корректный email');
             return;
         }
 
         try {
+            // Показываем индикатор загрузки
+            window.notifications.info('Отправляем заказ...', 2000);
+
             const response = await fetch('/api/order', {
                 method: 'POST',
                 headers: {
@@ -802,15 +841,15 @@ class ShopApp {
             const result = await response.json();
 
             if (response.ok) {
-                alert(result.message);
+                window.notifications.success(`🎉 ${result.message}`);
                 this.closeModal();
             } else {
-                alert(result.error || 'Ошибка при отправке заказа');
+                window.notifications.error(result.error || 'Ошибка при отправке заказа');
             }
 
         } catch (error) {
             console.error('Ошибка отправки заказа:', error);
-            alert('Не удалось отправить заказ. Попробуйте позже.');
+            window.notifications.error('Не удалось отправить заказ. Попробуйте позже.');
         }
     }
 

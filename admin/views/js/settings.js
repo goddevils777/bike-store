@@ -6,6 +6,85 @@ class SettingsManager {
         this.init();
     }
 
+    // Добавить после constructor()
+    saveSyncState(state) {
+        localStorage.setItem('admin_sync_state', JSON.stringify({
+            ...state,
+            timestamp: Date.now()
+        }));
+    }
+
+    loadSyncState() {
+        try {
+            const saved = localStorage.getItem('admin_sync_state');
+            if (!saved) return null;
+
+            const state = JSON.parse(saved);
+            // Показываем состояние только если прошло меньше часа
+            const hourAgo = Date.now() - (60 * 60 * 1000);
+
+            if (state.timestamp > hourAgo) {
+                return state;
+            }
+        } catch (e) {
+            console.error('Ошибка загрузки состояния:', e);
+        }
+        return null;
+    }
+
+    clearSyncState() {
+        localStorage.removeItem('admin_sync_state');
+    }
+
+    restoreSyncState() {
+        const state = this.loadSyncState();
+        if (!state) return;
+
+        const progressContainer = document.getElementById('updateProgress');
+        const statusText = document.getElementById('updateStatusText');
+        const logsContainer = this.createLogsContainer();
+
+        // Восстанавливаем UI
+        progressContainer.style.display = 'block';
+        statusText.textContent = state.statusText || 'Синхронизация завершена';
+        this.updateProgress(state.progress || 100, state.statusText);
+
+        // Восстанавливаем логи
+        if (state.logs) {
+            logsContainer.innerHTML = state.logs;
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        // Добавляем кнопку очистки
+        this.addClearButton(progressContainer);
+    }
+
+    addClearButton(container) {
+        let clearBtn = document.getElementById('clearLogsBtn');
+        if (clearBtn) return;
+
+        clearBtn = document.createElement('button');
+        clearBtn.id = 'clearLogsBtn';
+        clearBtn.textContent = '🗑️ Очистить логи';
+        clearBtn.style.cssText = `
+        margin-top: 16px;
+        padding: 8px 16px;
+        background: #6b7280;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+    `;
+
+        clearBtn.onclick = () => {
+            container.style.display = 'none';
+            this.clearSyncState();
+        };
+
+        container.appendChild(clearBtn);
+    }
+
     // ДОБАВИТЬ МЕТОД ПОСЛЕ constructor() В КАЖДОМ ФАЙЛЕ:
     setupGlobalErrorHandler() {
         // Перехватываем все fetch запросы на 401 ошибки
@@ -26,15 +105,15 @@ class SettingsManager {
 
     async init() {
         try {
-
             this.setupGlobalErrorHandler();
-            // Проверяем авторизацию
             await this.checkAuth();
-
-            // Загружаем настройки
             await this.loadSettings();
-
             this.setupEventListeners();
+
+            // ДОБАВИТЬ: Восстанавливаем состояние синхронизации
+            setTimeout(() => {
+                this.restoreSyncState();
+            }, 500);
 
             console.log('✅ Страница настроек инициализирована');
         } catch (error) {
@@ -95,6 +174,142 @@ class SettingsManager {
         return await response.json();
     }
 
+    // Добавь после метода loadNotificationEmail()
+    async loadSMTPSettings() {
+        try {
+            const response = await fetch(`${this.apiBase}/settings/smtp`);
+            if (!response.ok) throw new Error('Ошибка загрузки SMTP настроек');
+            return await response.json();
+        } catch (error) {
+            console.error('Ошибка загрузки SMTP:', error);
+            return null;
+        }
+    }
+
+    // Добавь в метод loadSettings()
+    async loadSettings() {
+        try {
+            // Загружаем все настройки
+            const [contacts, markup, notificationEmail, smtpSettings] = await Promise.all([
+                this.loadContacts(),
+                this.loadMarkup(),
+                this.loadNotificationEmail(),
+                this.loadSMTPSettings() // ДОБАВИТЬ ЭТУ СТРОКУ
+            ]);
+
+            // Заполняем формы
+            this.fillContactsForm(contacts);
+            this.fillMarkupForm(markup);
+            this.fillEmailForm(notificationEmail);
+            this.fillSMTPForm(smtpSettings); // ДОБАВИТЬ ЭТУ СТРОКУ
+            this.updateSMTPStatus(smtpSettings); // ДОБАВИТЬ ЭТУ СТРОКУ
+
+        } catch (error) {
+            console.error('Ошибка загрузки настроек:', error);
+            this.showNotification('Ошибка загрузки настроек', 'error');
+        }
+    }
+
+    // Добавь новые методы для SMTP
+    fillSMTPForm(smtpSettings) {
+        if (!smtpSettings) return;
+
+        document.getElementById('smtpHost').value = smtpSettings.host || 'smtp.gmail.com';
+        document.getElementById('smtpPort').value = smtpSettings.port || 587;
+        document.getElementById('smtpSecure').checked = smtpSettings.secure || false;
+        document.getElementById('smtpUser').value = smtpSettings.user || '';
+        document.getElementById('smtpPassword').value = smtpSettings.password || '';
+        document.getElementById('smtpEnabled').checked = smtpSettings.enabled || false;
+    }
+
+    updateSMTPStatus(smtpSettings) {
+        const statusDot = document.querySelector('.status-dot');
+        const statusText = document.querySelector('.status-text');
+
+        if (smtpSettings && smtpSettings.enabled && smtpSettings.user && smtpSettings.password) {
+            statusDot.classList.add('active');
+            statusText.textContent = `SMTP настроен (${smtpSettings.user})`;
+        } else {
+            statusDot.classList.remove('active');
+            statusText.textContent = 'SMTP не настроен';
+        }
+    }
+
+    async saveSMTPSettings() {
+        try {
+            const formData = new FormData(document.getElementById('smtpForm'));
+            const smtpData = {
+                host: formData.get('host'),
+                port: parseInt(formData.get('port')),
+                secure: formData.has('secure'),
+                user: formData.get('user'),
+                password: formData.get('password'),
+                enabled: formData.has('enabled')
+            };
+
+            // Валидация
+            if (!smtpData.host || !smtpData.port || !smtpData.user) {
+                this.showNotification('Заполните обязательные поля', 'error');
+                return;
+            }
+
+            if (!smtpData.password || smtpData.password === '••••••••') {
+                this.showNotification('Введите App Password', 'error');
+                return;
+            }
+
+            const response = await fetch(`${this.apiBase}/settings/smtp`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(smtpData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Ошибка сохранения');
+            }
+
+            this.showNotification('SMTP настройки сохранены успешно', 'success');
+
+            // Обновляем статус
+            this.updateSMTPStatus(smtpData);
+
+        } catch (error) {
+            console.error('Ошибка сохранения SMTP:', error);
+            this.showNotification(error.message, 'error');
+        }
+    }
+
+    async testSMTP() {
+        try {
+            const testBtn = document.getElementById('testSmtpBtn');
+            testBtn.disabled = true;
+            testBtn.textContent = '📤 Отправка...';
+
+            const response = await fetch(`${this.apiBase}/settings/smtp/test`, {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.showNotification(result.message, 'success');
+            } else {
+                this.showNotification(result.error, 'error');
+            }
+
+        } catch (error) {
+            console.error('Ошибка тестирования SMTP:', error);
+            this.showNotification('Ошибка отправки тестового письма', 'error');
+        } finally {
+            const testBtn = document.getElementById('testSmtpBtn');
+            testBtn.disabled = false;
+            testBtn.textContent = '📧 Отправить тест';
+        }
+    }
+
     fillContactsForm(contacts) {
         document.getElementById('contactEmail').value = contacts.email || '';
         document.getElementById('contactPhone').value = contacts.phone || '';
@@ -122,10 +337,23 @@ class SettingsManager {
                     this.logout();
                 } else if (href === '#dashboard') {
                     window.location.href = `/admin/${this.hash}/dashboard`;
+                } else if (href === '#seo') {
+                    window.location.href = `/admin/${this.hash}/seo`;
                 } else if (href === '#orders') {
                     window.location.href = `/admin/${this.hash}/orders`;
                 }
             });
+        });
+
+        // Форма SMTP настроек
+        document.getElementById('smtpForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveSMTPSettings();
+        });
+
+        // Тестирование SMTP
+        document.getElementById('testSmtpBtn').addEventListener('click', () => {
+            this.testSMTP();
         });
 
         // Формы
@@ -278,68 +506,169 @@ class SettingsManager {
     }
 
     async updateCatalog() {
+        const button = document.getElementById('updateCatalogBtn');
+        const statusText = document.getElementById('updateStatusText');
+        const progressContainer = document.getElementById('updateProgress');
+        const logsContainer = document.getElementById('sync-logs') || this.createLogsContainer();
+
         try {
-            const btn = document.getElementById('updateCatalogBtn');
-            const statusText = document.getElementById('updateStatusText');
-            const progress = document.getElementById('updateProgress');
-
             // Блокируем кнопку
-            btn.disabled = true;
-            btn.textContent = '⏳ Запуск обновления...';
+            button.disabled = true;
+            button.textContent = '⏳ Синхронизация запущена...';
 
-            // Показываем прогресс
-            statusText.textContent = 'Запуск парсинга...';
-            progress.style.display = 'block';
+            // Показываем статус и очищаем логи
+            progressContainer.style.display = 'block';
+            statusText.textContent = 'Запуск синхронизации товаров...';
+            logsContainer.innerHTML = '';
 
-            // Запускаем обновление (создадим отдельный API endpoint)
-            const response = await fetch('/api/parse-now', {
-                method: 'POST'
+            // Сбрасываем прогресс
+            let progressValue = 0;
+            this.updateProgress(progressValue, 'Подготовка к синхронизации...');
+
+            // Запускаем синхронизацию
+            const response = await fetch(`${this.apiBase}/sync-products`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'text/plain'
+                }
             });
 
             if (!response.ok) {
-                throw new Error('Ошибка запуска парсинга');
+                throw new Error('Ошибка запуска синхронизации');
             }
 
-            // Имитируем прогресс (в реальности можно использовать WebSocket или polling)
-            let progressValue = 0;
-            const progressInterval = setInterval(() => {
-                progressValue += Math.random() * 10;
-                if (progressValue > 90) progressValue = 90;
+            // Читаем поток данных
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
 
-                document.querySelector('.progress-fill').style.width = `${progressValue}%`;
+            while (true) {
+                const { done, value } = await reader.read();
 
-                if (progressValue > 30) statusText.textContent = 'Парсинг товаров...';
-                if (progressValue > 60) statusText.textContent = 'Обработка данных...';
-                if (progressValue > 80) statusText.textContent = 'Сохранение в базу...';
-            }, 500);
+                if (done) break;
 
-            // Ждем завершения (можно заменить на реальную проверку статуса)
-            setTimeout(() => {
-                clearInterval(progressInterval);
-                document.querySelector('.progress-fill').style.width = '100%';
-                statusText.textContent = 'Обновление завершено успешно!';
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
 
-                setTimeout(() => {
-                    progress.style.display = 'none';
-                    statusText.textContent = 'Готов к обновлению';
-                    btn.disabled = false;
-                    btn.textContent = '🚀 Запустить обновление каталога';
-                }, 2000);
-            }, 5000);
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.substring(6));
+                            this.handleSyncUpdate(data, logsContainer);
 
-            this.showNotification('Обновление каталога запущено', 'success');
+                            // Обновляем прогресс на основе логов
+                            if (data.type === 'log') {
+                                progressValue = this.updateProgressFromLog(data.message, progressValue);
+                            }
+                        } catch (e) {
+                            console.error('Ошибка парсинга лога:', e);
+                        }
+                    }
+                }
+            }
 
         } catch (error) {
-            console.error('Ошибка обновления каталога:', error);
-            this.showNotification('Ошибка запуска обновления', 'error');
+            console.error('Ошибка синхронизации:', error);
+            this.addLogEntry(logsContainer, 'error', `Ошибка: ${error.message}`);
+            this.updateProgress(0, 'Ошибка синхронизации');
+            this.showNotification('Ошибка запуска синхронизации', 'error');
+        } finally {
+            // Разблокируем кнопку
+            button.disabled = false;
+            button.textContent = '🚀 Запустить синхронизацию товаров';
+        }
+    }
 
-            // Возвращаем кнопку в исходное состояние
-            const btn = document.getElementById('updateCatalogBtn');
-            btn.disabled = false;
-            btn.textContent = '🚀 Запустить обновление каталога';
+    createLogsContainer() {
+        const container = document.createElement('div');
+        container.id = 'sync-logs';
+        container.style.cssText = `
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 16px;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.4;
+    `;
 
-            document.getElementById('updateProgress').style.display = 'none';
-            document.getElementById('updateStatusText').textContent = 'Готов к обновлению';
+        document.getElementById('updateProgress').appendChild(container);
+        return container;
+    }
+
+    handleSyncUpdate(data, logsContainer) {
+        const { type, message, code } = data;
+
+        switch (type) {
+            case 'log':
+                this.addLogEntry(logsContainer, 'info', message);
+                break;
+            case 'error':
+                this.addLogEntry(logsContainer, 'error', message);
+                break;
+            case 'complete':
+                const status = code === 0 ? 'success' : 'error';
+                this.addLogEntry(logsContainer, status, message);
+                this.updateProgress(100, message);
+                this.showNotification(message, status);
+                this.addClearButton(document.getElementById('updateProgress'));
+                break;
+        }
+
+        // ДОБАВИТЬ: Сохраняем состояние
+        this.saveSyncState({
+            progress: this.currentProgress || 0,
+            statusText: document.getElementById('updateStatusText').textContent,
+            logs: logsContainer.innerHTML,
+            isRunning: type !== 'complete'
+        });
+    }
+    addLogEntry(container, type, message) {
+        const entry = document.createElement('div');
+        entry.style.cssText = `
+        padding: 4px 0;
+        border-bottom: 1px solid #f1f5f9;
+        color: ${type === 'error' ? '#e53e3e' : type === 'success' ? '#38a169' : '#4a5568'};
+    `;
+
+        const timestamp = new Date().toLocaleTimeString();
+        entry.textContent = `[${timestamp}] ${message.trim()}`;
+
+        container.appendChild(entry);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    updateProgressFromLog(message, currentProgress) {
+        // Анализируем сообщения и обновляем прогресс
+        if (message.includes('Загружено') && message.includes('товаров из всех категорий')) {
+            return 10;
+        } else if (message.includes('Синхронизация') && message.includes('/14:')) {
+            const match = message.match(/(\d+)\/14/);
+            if (match) {
+                const category = parseInt(match[1]);
+                return 10 + (category / 14) * 80; // 10% начальная загрузка + 80% на категории
+            }
+        } else if (message.includes('Результат синхронизации')) {
+            return 95;
+        } else if (message.includes('завершена')) {
+            return 100;
+        }
+
+        return Math.min(currentProgress + 0.5, 90); // Медленное увеличение
+    }
+
+    updateProgress(value, text) {
+        const progressBar = document.querySelector('.progress-fill');
+        const statusText = document.getElementById('updateStatusText');
+
+        if (progressBar) {
+            progressBar.style.width = `${value}%`;
+        }
+
+        if (statusText && text) {
+            statusText.textContent = text;
         }
     }
 

@@ -387,22 +387,26 @@ class OrdersManager {
         }
     }
 
-    setupEventListeners() {
-        // Навигация
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const href = link.getAttribute('href');
+setupEventListeners() {
+    // Навигация
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const href = link.getAttribute('href');
 
-                if (href === '#logout') {
-                    this.logout();
-                } else if (href === '#dashboard') {
-                    window.location.href = `/admin/${this.hash}/dashboard`;
-                } else if (href === '#settings') {
-                    window.location.href = `/admin/${this.hash}/settings`;
-                }
-            });
+            if (href === '#logout') {
+                this.logout();
+            } else if (href === '#dashboard') {
+                window.location.href = `/admin/${this.hash}/dashboard`;
+            } else if (href === '#orders') {
+                window.location.href = `/admin/${this.hash}/orders`;
+            } else if (href === '#settings') {
+                window.location.href = `/admin/${this.hash}/settings`;
+            } else if (href === '#seo') {
+                window.location.href = `/admin/${this.hash}/seo`;
+            }
         });
+    });
 
         // Фильтры
         document.getElementById('applyFilters').addEventListener('click', () => {
